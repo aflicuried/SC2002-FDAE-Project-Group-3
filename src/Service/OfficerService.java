@@ -80,15 +80,13 @@ public class OfficerService extends ApplicantService implements IOfficerService{
         return enquiryDatabase.findByProject(officer.getProjectHandling());
     }
 
-    public void replyEnquiry(int enquiryId, String response) {
-        Enquiry enquiry = enquiryDatabase.findById(enquiryId);
-        if (enquiry == null) {
-            throw new IllegalArgumentException("Enquiry not found.");
-        }
-        if (!enquiry.getProject().equals(officer.getProjectHandling())) {
-            throw new IllegalArgumentException("Officer can only reply to enquiries for their own project.");
-        }
-        enquiry.setResponse(response);
+    public boolean checkAuthority(int id) {
+        return enquiryDatabase.findById(id).getProject()
+                .getManager().getName().equals(officer.getName());
+    }
+    public void replyEnquiry(int id, String reply) {
+        Enquiry enquiry = enquiryDatabase.findById(id);
+        enquiry.setResponse(reply);
     }
 
     public boolean isAvailableToBookFlat() {

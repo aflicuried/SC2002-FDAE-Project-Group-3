@@ -90,7 +90,7 @@ public class ApplicationDatabase {
 
     // get Applications copies
     public List<Application> findApplications() {
-        return new ArrayList<>(applications);
+        return applications;
     }
 
     // find Application by Project

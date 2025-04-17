@@ -77,7 +77,7 @@ public class RegistrationDatabase {
     }
 
     public List<Registration> findAll() {
-        return new ArrayList<>(registrations);
+        return registrations;
     }
 
     // add registration

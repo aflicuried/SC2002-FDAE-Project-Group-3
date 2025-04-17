@@ -58,9 +58,11 @@ public class ApplicantService implements IApplicantService {
         if (flatType == 1) {
             application = new Application(applicant, project, ApplicationStatus.PENDING, Application.FlatType.TWO_ROOM);
         }
-        else {
+        else if (flatType == 2) {
             application = new Application(applicant, project, ApplicationStatus.PENDING, Application.FlatType.THREE_ROOM);
         }
+        else
+            return null;
         return application;
     }
     public void sendApplication(Application application) {

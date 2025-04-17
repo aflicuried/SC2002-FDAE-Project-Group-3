@@ -6,7 +6,6 @@ import View.ProjectView;
 import View.EnquiryView;
 
 import java.util.List;
-import java.util.Scanner;
 
 public class ApplicantInterface extends BaseInterface {
     //set final to maintain this thread
@@ -21,35 +20,40 @@ public class ApplicantInterface extends BaseInterface {
 
     public void start() {
         while(true) {
+            System.out.println("Welcome, " + currentUser.getName() + "!");
             System.out.println("Applicant Menu: ");
-            System.out.println("1. View or Apply Projects");
-            System.out.println("2. View My Project");
-            System.out.println("3. Book a Flat");
-            System.out.println("4. Request Withdrawal for Application");
-            System.out.println("5. Submit an Enquiry");
-            System.out.println("6. Edit Enquiries");
-            System.out.println("7. Change password");
-            System.out.println("8. Log Out");
+            System.out.println("1 - View or Apply Projects");
+            System.out.println("2 - View My Project");
+            System.out.println("3 - Book a Flat");
+            System.out.println("4 - Request Withdrawal for Application");
+            System.out.println("5 - Submit an Enquiry");
+            System.out.println("6 - Edit Enquiries");
+            System.out.println("7 - Change password");
+            System.out.println("8 - Log Out");
             System.out.println("Enter your choice: ");
 
-            switch (sc.nextInt()) {
+            choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
 
                 case 1:
                     List<Project> projects = applicantService.getVisibleProjects(); //handle eligible projects
                     ProjectView.displayProjectList(projects, currentUser); // whether to display 2-room or 3-room in every project
-                    System.out.println("1. Apply A Project");
-                    System.out.println("2. Back");
+                    System.out.println("1 - Apply A Project");
+                    System.out.println("2 - Back");
                     System.out.println("Enter your choice: ");
 
-                    switch (sc.nextInt()) {
+                    choice = sc.nextInt();
+                    sc.nextLine();
+
+                    switch (choice) {
                         case 1:
                             if (applicantService.haveProject()) {
                                 System.out.println("You have already applied for a project.");
                                 break;
                             }
-
                             System.out.println("Enter project name: ");
-                            sc.nextLine();
                             String name = sc.nextLine();
                             Project project = projectService.findProjectByName(name);
                             if (project == null) {
@@ -59,18 +63,23 @@ public class ApplicantInterface extends BaseInterface {
 
                             try {
                                 System.out.println("Select flat type: ");
-                                System.out.println("1. 2-Room");
+                                System.out.println("1 - 2-Room");
                                 if (applicantService.isSingle())
-                                    System.out.println("2. 3-Room");
+                                    System.out.println("2 - 3-Room");
                                 int flatType = sc.nextInt();
+                                sc.nextLine();
                                 Application application = applicantService.newApplication(project, flatType);
-
+                                if (application == null) {
+                                    System.out.println("Invalid Application.");
+                                }
                                 System.out.println("Confirm application details: ");
                                 ApplicationView.displayApplication(application);
-                                System.out.println("1. Send Application");
-                                System.out.println("2. Back");
+                                System.out.println("1 - Send Application");
+                                System.out.println("2 - Back");
                                 System.out.println("Enter your choice: ");
-                                if (sc.nextInt() == 1) {
+                                choice = sc.nextInt();
+                                sc.nextLine();
+                                if (choice == 1) {
                                     applicantService.sendApplication(application);
                                     System.out.println("Application submitted successfully.");
                                 }
@@ -112,6 +121,8 @@ public class ApplicantInterface extends BaseInterface {
                     break;
 
                 case 5:
+                    projects = applicantService.getVisibleProjects();
+                    ProjectView.displayProjectList(projects, currentUser);
                     System.out.println("Enter the project name you want to enquire about: ");
                     String name = sc.nextLine();
                     Project enqProject = projectService.findProjectByName(name);
@@ -141,39 +152,41 @@ public class ApplicantInterface extends BaseInterface {
                     int enquiryId = sc.nextInt();
                     sc.nextLine();
                     Enquiry enquiry = applicantService.getEnquiry(enquiryId);
-                    if (enquiry != null) {
+                    if (enquiry == null) {
                         System.out.println("Invalid enquiry ID.");
                         break;
                     }
-                    System.out.println("Enter your new enquiry: ");
-                    String newEnquiry = sc.nextLine();
-                    applicantService.editEnquiry(newEnquiry, enquiry);
+                    System.out.println("Enter new enquiry message: ");
+                    String newQuery = sc.nextLine();
+                    applicantService.editEnquiry(newQuery, enquiry);
                     System.out.println("Enquiry edited successfully.");
                     break;
 
                 case 7: // change password
                     AuthService authService = new AuthService();
                     System.out.println("Enter your old password: ");
-                    String oldPassword = sc.next();
+                    String oldPassword = sc.nextLine();
                     if (authService.checkUser(currentUser.getNric(), oldPassword)){
                         System.out.println("Enter your new password: ");
-                        String newPassword = sc.next();
+                        String newPassword = sc.nextLine();
                         if (newPassword != null && !newPassword.trim().isEmpty()) {
                             authService.changePassword(currentUser, newPassword);
                             System.out.println("Password changed successfully.");
+                            return;
                         }
                         else
                             System.out.println("Invalid password.");
                     }
-                    else
+                    else {
                         System.out.println("Incorrect old password.");
+                    }
                     break;
 
                 case 8: // log out
                     return;
 
                 default:
-                    System.out.println("Invalid choice");
+                    System.out.println("Invalid choice"); // 输入了非数字会导致报错。catch！
             }
         }
     }

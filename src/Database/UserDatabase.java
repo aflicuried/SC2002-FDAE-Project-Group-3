@@ -65,15 +65,15 @@ public class UserDatabase {
     }
 
     public List<Applicant> findApplicants() {
-        return new ArrayList<>(applicants);//return copy to avoid edition or deletion!
+        return applicants;
     }
 
     public List<HDBOfficer> findOfficers() {
-        return new ArrayList<>(officers);//return copy to avoid edition or deletion!
+        return officers;
     }
 
     public List<HDBManager> findManagers() {
-        return new ArrayList<>(managers);//return copy to avoid edition or deletion!
+        return managers;
     }
 
     public List<User> findUsers() {

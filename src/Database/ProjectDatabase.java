@@ -70,6 +70,7 @@ public class ProjectDatabase {
             }
 
             Project project = new Project(name, neighbourhood, flatTypes, openingDate, closingDate, manager, officeSlots, officers);
+            project.setVisibility(true);
 
             for (String officerName : officerNames){
                 HDBOfficer officer = userDatabase.findOfficers().stream()
@@ -85,7 +86,7 @@ public class ProjectDatabase {
     }
 
     public List<Project> findProjects() {
-        return new ArrayList<>(projects);   //return copy to avoid edition or deletion!
+        return projects;
     }
 
     public Project findProjectByName(String name) {

@@ -16,5 +16,6 @@ public interface IOfficerService extends IApplicantService {
 
     void bookApplication(String applicantNric, Project project);
     List<Enquiry> getEnquiriesForReply();
-    void replyEnquiry(int enquiryId, String response);
+    boolean checkAuthority(int id);
+    void replyEnquiry(int id, String reply) ;
 }

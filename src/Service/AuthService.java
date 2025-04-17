@@ -2,6 +2,7 @@ package Service;
 
 import Entity.User;
 import Database.UserDatabase;
+import View.UserView;
 
 import javax.naming.AuthenticationException;
 import java.util.List;
@@ -15,8 +16,8 @@ public class AuthService {
     }
 
     public User findByNric(String nric) {
-        List<User> allUsers = userDatabase.findUsers();
-        return allUsers.stream().filter(user -> nric.equals(user.getNric()))
+        ;
+        return userDatabase.findUsers().stream().filter(user -> nric.equals(user.getNric()))
                 .findFirst().orElse(null);
     }
 

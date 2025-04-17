@@ -78,7 +78,7 @@ public class EnquiryDatabase {
     }
 
     public List<Enquiry> findAll() {
-        return new ArrayList<>(enquiries);
+        return enquiries;
     }
 
     public Enquiry findById(int id) {
@@ -95,7 +95,7 @@ public class EnquiryDatabase {
     }
 
     public List<Enquiry> findByProject(Project project) {
-        return findAll().stream()
+        return enquiries.stream()
                 .filter(e -> e.getProject().equals(project))
                 .collect(Collectors.toList());
     }

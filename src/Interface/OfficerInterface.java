@@ -21,18 +21,18 @@ public class OfficerInterface extends BaseInterface {
 
     public void start() {
         while(true) {
-            System.out.println("Welcome, " + currentUser.getName() + "!");
+            System.out.println("\nWelcome, " + currentUser.getName() + "!");
             System.out.println("Officer Menu: ");
             System.out.println("1 - View or Apply Projects");
-            System.out.println("2 - View My Project");
+            System.out.println("2 - View My Applied Project");
             System.out.println("3 - Book a Flat (Applicant)");
             System.out.println("4 - Request Withdrawal for Application");
             System.out.println("5 - Submit an Enquiry");
-            System.out.println("6 - Edit Enquiries");
+            System.out.println("6 - Edit or Delete Enquiries");
 
             System.out.println("7 - Register for a Project");
             System.out.println("8 - View My Registration");
-            System.out.println("9 - View My Project");
+            System.out.println("9 - View My Managing Project");
 
             System.out.println("10 - Manage Applications (Set to BOOKED)");
             System.out.println("11 - Reply to Enquiries");
@@ -46,6 +46,10 @@ public class OfficerInterface extends BaseInterface {
             switch (choice) {
                 case 1:
                     List<Project> projects = officerService.getVisibleProjects();
+                    if (projects.isEmpty()) {
+                        System.out.println("Project not found");
+                        break;
+                    }
                     ProjectView.displayProjectList(projects, currentUser);
                     System.out.println("1 - Apply for a Project");
                     System.out.println("2 - Back");
@@ -109,16 +113,20 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 3: // book a flat for myself
-                    if (officerService.isAvailableToBookFlat()) {
-                        System.out.println("You can book a flat now.");
+                    try {
+                        if (officerService.isAvailableToBookFlat()) {
+                            System.out.println("You can book a flat now.");
+                        } else
+                            System.out.println("Application must be SUCCESSFUL to book.");
+                    }catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
-                    else
-                        System.out.println("Application must be SUCCESSFUL to book.");
                     break;
 
                 case 4: // withdraw application
                     try {
                         officerService.withdrawalApplication();
+                        System.out.println("Submitted withdrawal successfully.");
                     } catch (IllegalArgumentException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
@@ -126,6 +134,10 @@ public class OfficerInterface extends BaseInterface {
 
                 case 5: // submit enquiry
                     projects = officerService.getVisibleProjects();
+                    if (projects.isEmpty()) {
+                        System.out.println("Project not found.");
+                        break;
+                    }
                     ProjectView.displayProjectList(projects, currentUser);
                     System.out.println("Enter the project name you want to enquire about: ");
                     String enqName = sc.nextLine();
@@ -135,7 +147,7 @@ public class OfficerInterface extends BaseInterface {
                         break;
                     }
                     if (!officerService.isEligibleForProject(enqProject)) {
-                        System.out.println("You are not eligible to enquire about this project.");
+                        System.out.println("You are not allowed to enquire about this project.");
                         break;
                     }
                     System.out.println("Enter your enquiry: ");
@@ -155,18 +167,41 @@ public class OfficerInterface extends BaseInterface {
                     System.out.println("Enter enquiry ID to edit: ");
                     int enquiryId = sc.nextInt();
                     sc.nextLine();
+
                     Enquiry enquiry = officerService.getEnquiry(enquiryId);
                     if (enquiry == null) {
                         System.out.println("Invalid enquiry ID.");
                         break;
                     }
-                    System.out.println("Enter new enquiry message: ");
-                    String newQuery = sc.nextLine();
-                    officerService.editEnquiry(newQuery, enquiry);
-                    System.out.println("Enquiry edited successfully.");
+                    System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+
+                    switch (choice) {
+                        case 1:
+                            System.out.println("Enter new enquiry message: ");
+                            String newQuery = sc.nextLine();
+                            officerService.editEnquiry(newQuery, enquiry);
+                            System.out.println("Enquiry edited successfully.");
+                            break;
+                        case 2:
+                            officerService.deleteEnquiry(enquiry);
+                            System.out.println("Enquiry deleted successfully.");
+                            break;
+                        case 3:
+                            break;
+                    }
                     break;
 
                 case 7:
+                    List<Project> projects2 = officerService.getProjectsForRegi();
+                    if (projects2.isEmpty()) {
+                        System.out.println("Project for registration not found");
+                        break;
+                    }
+                    System.out.println("Here are the projects you can register: ");
+                    ProjectView.displayManagedList(projects2);
+
                     System.out.println("Enter the project name to register for: ");
                     String regProjectName = sc.nextLine();
                     try {
@@ -180,7 +215,7 @@ public class OfficerInterface extends BaseInterface {
                 case 8:
                     List<Registration> registrations = officerService.getRegistrations();
                     if (registrations.isEmpty()) {
-                        System.out.println("No registrations found.");
+                        System.out.println("Registrations not found.");
                         break;
                     }
                     System.out.println("Your registrations: ");
@@ -188,7 +223,7 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 9:
-                    Project managedProject1 = officerService.getManagedProject();
+                    Project managedProject1 = officerService.getProjectHandling();
                     if (managedProject1 == null) {
                         System.out.println("You are not managing any project.");
                         break;
@@ -198,13 +233,15 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 10: // manage application
-                    System.out.println("Enter applicant NRIC: ");
-                    String nric = sc.nextLine();
                     Project managedProject = officerService.getProjectHandling();
                     if (managedProject == null) {
                         System.out.println("You are not managing any project.");
                         break;
                     }
+
+                    System.out.println("Enter applicant NRIC: ");
+                    String nric = sc.nextLine();
+
                     try {
                         officerService.bookApplication(nric, managedProject);
                         System.out.println("Application set to BOOKED successfully.");
@@ -214,45 +251,47 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 11: // reply to enquiries
-                    List<Enquiry> projectEnquiries = officerService.getEnquiriesForReply();
-                    if (projectEnquiries.isEmpty()) {
-                        System.out.println("No enquiries found for your project.");
-                        break;
-                    }
-                    System.out.println("Enquiries for your project: ");
-                    EnquiryView.displayEnquiries(projectEnquiries);
-                    System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    try {
+                        List<Enquiry> projectEnquiries = officerService.getEnquiriesForReply();
+                        if (projectEnquiries.isEmpty())
+                            throw (new IllegalArgumentException("No enquiries found."));
 
-                    switch (choice) {
-                        case 1:
-                            System.out.println("Enter enquiry ID to reply: ");
-                            int replyId = sc.nextInt();
-                            sc.nextLine();
-                            if(!officerService.checkAuthority(replyId)){
-                                System.out.println("You are not authorized to reply this enquiry.");
+                        System.out.println("Enquiries for your project: ");
+                        EnquiryView.displayEnquiries(projectEnquiries);
+                        System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
+
+                        switch (choice) {
+                            case 1:
+                                System.out.println("Enter enquiry ID to reply: ");
+                                int replyId = sc.nextInt();
+                                sc.nextLine();
+
+                                System.out.println("Enter your reply.");
+                                String reply = sc.nextLine();
+                                officerService.replyEnquiry(replyId, reply);
+                                System.out.println("Reply successfully.");
                                 break;
-                            }
-                            System.out.println("Enter your reply.");
-                            String reply = sc.nextLine();
-                            officerService.replyEnquiry(replyId, reply);
-                            System.out.println("Reply successfully.");
-                            break;
-                        case 2:
-                            break;
-                        default:
-                            System.out.println("Invalid choice.");
-                    }
+                            case 2:
+                                break;
+                            default:
+                                System.out.println("Invalid choice.");
+                        }
+                    } catch (IllegalArgumentException e) {
+                            System.out.println("Error: " + e.getMessage());
+                        }
                     break;
 
                 case 12: // change password
                     AuthService authService = new AuthService();
                     System.out.println("Enter your old password: ");
-                    String oldPassword = sc.nextLine();
+                    String oldPassword = sc.next();
+                    sc.nextLine();
                     if (authService.checkUser(currentUser.getNric(), oldPassword)) {
                         System.out.println("Enter your new password: ");
-                        String newPassword = sc.nextLine();
+                        String newPassword = sc.next();
+                        sc.nextLine();
                         if (newPassword != null && !newPassword.trim().isEmpty()) {
                             authService.changePassword(currentUser, newPassword);
                             System.out.println("Password changed successfully.");

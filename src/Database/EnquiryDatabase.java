@@ -76,7 +76,9 @@ public class EnquiryDatabase {
         enquiry.setId(nextId++); // 设置 ID 并递增
         enquiries.add(enquiry);
     }
-
+    public void removeEnquiry(Enquiry enquiry) {
+        enquiries.remove(enquiry);
+    }
     public List<Enquiry> findAll() {
         return enquiries;
     }

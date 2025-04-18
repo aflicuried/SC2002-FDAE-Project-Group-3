@@ -149,7 +149,7 @@ public class ManagerService implements IManagerService {
     //
     public List<Application> getApplications() {
         return applicationDatabase.findApplications()
-                .stream().filter(a -> a.getProject().getManager()
+                .stream().filter(a -> a.getProject().getManager().getName()
                         .equals(manager.getName()))
                 .collect(Collectors.toList());
     }

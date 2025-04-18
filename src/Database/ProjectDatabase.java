@@ -60,7 +60,10 @@ public class ProjectDatabase {
 
             int officeSlots = Integer.parseInt(data[11].trim());
 
-            List<String> officerNames = Arrays.asList(data[12].replace("\"", "").split(","));
+            String[] officerNames = new String[officeSlots-1];
+            for (int i = 12; i < data.length; i++) {
+                officerNames[i-12] = data[i].replace("\"", "");
+            }
 
             List<HDBOfficer> officers = new ArrayList<>();
             for (String officerName : officerNames){
@@ -71,15 +74,17 @@ public class ProjectDatabase {
 
             Project project = new Project(name, neighbourhood, flatTypes, openingDate, closingDate, manager, officeSlots, officers);
             project.setVisibility(true);
+            projects.add(project);
 
             for (String officerName : officerNames){
                 HDBOfficer officer = userDatabase.findOfficers().stream()
-                        .filter(m -> m.getName().equals(officerName)).findFirst().orElse(null);
+                        .filter(m -> m.getName().equals(officerName))
+                        .findFirst().orElse(null);
                 if (officer != null) {
                     officer.setProjectHandling(project);
                 }
             }
-            projects.add(project);
+
         }
         br.close();
         return projects;
@@ -96,6 +101,7 @@ public class ProjectDatabase {
 
     public void addProject(Project project) {
         findProjects().add(project);
+        project.setVisibility(true);
     }
 
     public void removeProject(Project project) {

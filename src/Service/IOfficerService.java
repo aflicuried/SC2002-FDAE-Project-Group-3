@@ -10,12 +10,11 @@ import java.util.List;
 public interface IOfficerService extends IApplicantService {
     Project getProjectHandling();
 
+    List<Project> getProjectsForRegi();
     void submitRegistration(String projectName);
     List<Registration> getRegistrations();
-    Project getManagedProject();
 
     void bookApplication(String applicantNric, Project project);
     List<Enquiry> getEnquiriesForReply();
-    boolean checkAuthority(int id);
     void replyEnquiry(int id, String reply) ;
 }

@@ -27,7 +27,7 @@ public class ApplicantInterface extends BaseInterface {
             System.out.println("3 - Book a Flat");
             System.out.println("4 - Request Withdrawal for Application");
             System.out.println("5 - Submit an Enquiry");
-            System.out.println("6 - Edit Enquiries");
+            System.out.println("6 - Edit or Delete Enquiries");
             System.out.println("7 - Change password");
             System.out.println("8 - Log Out");
             System.out.println("Enter your choice: ");
@@ -39,6 +39,10 @@ public class ApplicantInterface extends BaseInterface {
 
                 case 1:
                     List<Project> projects = applicantService.getVisibleProjects(); //handle eligible projects
+                    if (projects.isEmpty()) {
+                        System.out.println("Project not found");
+                        break;
+                    }
                     ProjectView.displayProjectList(projects, currentUser); // whether to display 2-room or 3-room in every project
                     System.out.println("1 - Apply A Project");
                     System.out.println("2 - Back");
@@ -104,24 +108,32 @@ public class ApplicantInterface extends BaseInterface {
                         System.out.println("You have not applied for a project.");
                     break;
 
-                case 3:
-                    if (applicantService.isAvailableToBookFlat()) {
-                        System.out.println("You can book a flat now.");
+                case 3: // book a flat
+                    try {
+                        if (applicantService.isAvailableToBookFlat()) {
+                            System.out.println("You can book a flat now.");
+                        } else
+                            System.out.println("Application must be SUCCESSFUL to book.");
+                    }catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
-                    else
-                        System.out.println("Application must be SUCCESSFUL to book.");
                     break;
 
                 case 4: // withdraw application
                     try {
                         applicantService.withdrawalApplication();
+                        System.out.println("Submitted withdrawal successfully.");
                     } catch (IllegalArgumentException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
                     break;
 
-                case 5:
+                case 5: // submit an enquiry
                     projects = applicantService.getVisibleProjects();
+                    if (projects.isEmpty()) {
+                        System.out.println("Project not found.");
+                        break;
+                    }
                     ProjectView.displayProjectList(projects, currentUser);
                     System.out.println("Enter the project name you want to enquire about: ");
                     String name = sc.nextLine();
@@ -140,7 +152,7 @@ public class ApplicantInterface extends BaseInterface {
                     System.out.println("Enquiry submitted successfully.");
                     break;
 
-                case 6: // edit enquiry
+                case 6: // edit or delete enquiry
                     List<Enquiry> enquiries = applicantService.getEnquiries();
                     if (enquiries.isEmpty()) {
                         System.out.println("No enquiries found.");
@@ -148,27 +160,44 @@ public class ApplicantInterface extends BaseInterface {
                     }
                     System.out.println("Here are your enquiries: ");
                     EnquiryView.displayEnquiries(enquiries);
-                    System.out.println("Enter enquiry ID to edit: ");
+                    System.out.println("Enter enquiry ID to edit or delete: ");
                     int enquiryId = sc.nextInt();
                     sc.nextLine();
+
                     Enquiry enquiry = applicantService.getEnquiry(enquiryId);
                     if (enquiry == null) {
                         System.out.println("Invalid enquiry ID.");
                         break;
                     }
-                    System.out.println("Enter new enquiry message: ");
-                    String newQuery = sc.nextLine();
-                    applicantService.editEnquiry(newQuery, enquiry);
-                    System.out.println("Enquiry edited successfully.");
+                    System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
+                    choice = sc.nextInt();
+                    sc.nextLine();
+
+                    switch (choice) {
+                        case 1:
+                            System.out.println("Enter new enquiry message: ");
+                            String newQuery = sc.nextLine();
+                            applicantService.editEnquiry(newQuery, enquiry);
+                            System.out.println("Enquiry edited successfully.");
+                            break;
+                        case 2:
+                            applicantService.deleteEnquiry(enquiry);
+                            System.out.println("Enquiry deleted successfully.");
+                            break;
+                        case 3:
+                            break;
+                    }
                     break;
 
                 case 7: // change password
                     AuthService authService = new AuthService();
                     System.out.println("Enter your old password: ");
-                    String oldPassword = sc.nextLine();
+                    String oldPassword = sc.next();
+                    sc.nextLine();
                     if (authService.checkUser(currentUser.getNric(), oldPassword)){
                         System.out.println("Enter your new password: ");
-                        String newPassword = sc.nextLine();
+                        String newPassword = sc.next();
+                        sc.nextLine();
                         if (newPassword != null && !newPassword.trim().isEmpty()) {
                             authService.changePassword(currentUser, newPassword);
                             System.out.println("Password changed successfully.");

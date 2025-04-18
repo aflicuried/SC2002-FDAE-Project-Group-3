@@ -79,6 +79,9 @@ public class ApplicantService implements IApplicantService {
     //
     public boolean isAvailableToBookFlat() {
         Application application = applicationDatabase.findByApplicantNric(applicant.getNric());
+        if (application == null) {
+            throw (new IllegalArgumentException("Application not found."));
+        }
         if (application.getStatus() == ApplicationStatus.SUCCESSFUL) {
             return true;
         }
@@ -88,14 +91,10 @@ public class ApplicantService implements IApplicantService {
     //
     public void withdrawalApplication() {
         Application application = applicationDatabase.findByApplicantNric(applicant.getNric());
-        if (application.getStatus() == ApplicationStatus.SUCCESSFUL
-                || application.getStatus() == ApplicationStatus.BOOKED) {
-            application.setWithdrawal(true);
-            System.out.println("Submitted withdrawal successfully.");
+        if(application == null) {
+            throw (new IllegalArgumentException("Application not found."));
         }
-        else {
-            System.out.println("Withdrawal failed");
-        }
+        application.setWithdrawal(true);
     }
 
     //
@@ -113,5 +112,8 @@ public class ApplicantService implements IApplicantService {
     }
     public void editEnquiry(String q, Enquiry enquiry) {
         enquiry.setMessage(q);
+    }
+    public void deleteEnquiry(Enquiry enquiry) {
+        enquiryDatabase.removeEnquiry(enquiry);
     }
 }

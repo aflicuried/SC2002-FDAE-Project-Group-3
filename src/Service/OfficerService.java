@@ -7,6 +7,7 @@ import Database.RegistrationDatabase;
 import Entity.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class OfficerService extends ApplicantService implements IOfficerService{
     //database
@@ -23,6 +24,31 @@ public class OfficerService extends ApplicantService implements IOfficerService{
     }
 
     //methods
+    @Override
+    public List<Project> getVisibleProjects() {
+        if (officer.getProjectHandling() != null){
+            String name = officer.getProjectHandling().getName();
+            return projectDatabase.findProjects().stream()
+                    .filter(Project::isVisible)
+                    .filter(this::isEligibleForProject)
+                    .filter(p -> !p.getName().equals(name))
+                    .collect(Collectors.toList());
+        }
+        return projectDatabase.findProjects().stream()
+                .filter(Project::isVisible)
+                .filter(this::isEligibleForProject)
+                .collect(Collectors.toList());
+    }
+
+    public List<Project> getProjectsForRegi() {
+        if (officer.getApplication() == null){
+            return projectDatabase.findProjects();
+        }
+        return projectDatabase.findProjects()
+                .stream().filter(p -> !p.getName().equals(officer.getApplication().getProject().getName()))
+                .collect(Collectors.toList());
+    }
+
     public void submitRegistration(String projectName) {
         Project project = projectDatabase.findProjectByName(projectName);
         if (project == null) {
@@ -31,16 +57,15 @@ public class OfficerService extends ApplicantService implements IOfficerService{
         if (officer.getProjectHandling() != null && officer.getProjectHandling().equals(project)) {
             throw new IllegalArgumentException("You are already managing this project.");
         }
+        if (!registrationDatabase.findByOfficerNric(officer.getNric()).isEmpty()) { // actually there are some problems.
+            throw new IllegalArgumentException("You have already sent registrations."); // if >1 registrations?
+        }
         Registration registration = new Registration(officer, project, Registration.Status.PENDING);
         registrationDatabase.addRegistration(registration);
     }
 
     public List<Registration> getRegistrations() {
         return registrationDatabase.findByOfficerNric(officer.getNric());
-    }
-
-    public Project getManagedProject() {
-        return officer.getProjectHandling();
     }
 
     @Override
@@ -61,13 +86,17 @@ public class OfficerService extends ApplicantService implements IOfficerService{
 
     public void bookApplication(String applicantNric, Project project) {
         if (!project.equals(officer.getProjectHandling())) {
-            throw new IllegalArgumentException("Officer can only manage their own project.");
+            throw new IllegalArgumentException("Officer can only manage applications under their own project.");
         }
         Application application = applicationDatabase.findByApplicantNric(applicantNric);
+        if (application == null) {
+            throw new IllegalArgumentException("Applicant or application not found.");
+        }
         if (application.getProject().equals(project)
                 && application.getStatus() == Application.ApplicationStatus.SUCCESSFUL) {
             application.setStatus(Application.ApplicationStatus.BOOKED);
-        }//need updates: more than 1 application?
+            return;
+        }
         throw new IllegalArgumentException("No successful application found for this applicant.");
     }
 
@@ -77,13 +106,13 @@ public class OfficerService extends ApplicantService implements IOfficerService{
 
     @Override
     public List<Enquiry> getEnquiriesForReply() {
+        Project project = officer.getProjectHandling();
+        if (project == null) {
+            throw new IllegalArgumentException("You are not handling any project.");
+        }
         return enquiryDatabase.findByProject(officer.getProjectHandling());
     }
 
-    public boolean checkAuthority(int id) {
-        return enquiryDatabase.findById(id).getProject()
-                .getManager().getName().equals(officer.getName());
-    }
     public void replyEnquiry(int id, String reply) {
         Enquiry enquiry = enquiryDatabase.findById(id);
         enquiry.setResponse(reply);

@@ -20,4 +20,5 @@ public interface IApplicantService {
     List<Enquiry> getEnquiries();
     Enquiry getEnquiry(int enquiryId);
     void editEnquiry(String q, Enquiry enquiry);
+    void deleteEnquiry(Enquiry enquiry);
 }

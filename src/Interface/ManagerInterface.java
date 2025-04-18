@@ -36,7 +36,7 @@ public class ManagerInterface extends BaseInterface {
 
             switch (choice) {
                 case 1:
-                    ProjectView.displayProjectList(projectService.findAllProjects(), currentUser);
+                    ProjectView.displayManagedList(projectService.findAllProjects());
                     System.out.println("1 - Create A New Project");
                     System.out.println("2 - Edit or Delete A Project");
                     System.out.println("3 - Toggle visibility of a Project");
@@ -66,9 +66,9 @@ public class ManagerInterface extends BaseInterface {
                             System.out.println("3-room Flat Price:");
                             int PriceOf3Room = sc.nextInt();
                             sc.nextLine();
-                            System.out.println("Application Opening Date:");
+                            System.out.println("Application Opening Date (format: yyyy/M/d, e.g. 2000/1/30):");
                             String openingDate = sc.nextLine();
-                            System.out.println("Application Closing Date:");
+                            System.out.println("Application Closing Date (format: yyyy/M/d, e.g. 2000/1/30):");
                             String closingDate = sc.nextLine();
                             System.out.println("Available HDB Officer Slots:"); //need 'confirm details' and EH.
                             int officerSlots = sc.nextInt();
@@ -80,7 +80,7 @@ public class ManagerInterface extends BaseInterface {
                                         UnitsOf3Room, PriceOf3Room, openingDate, closingDate,
                                         officerSlots, currentUser);
                                 System.out.println("Confirm Details:");
-                                ProjectView.displayProject(project, currentUser);
+                                ProjectView.displayManagedProject(project);
 
                                 System.out.println("1 - Create Project");
                                 System.out.println("2 - Back");
@@ -137,7 +137,7 @@ public class ManagerInterface extends BaseInterface {
                                     try {
                                         managerService.editProject(choice, project2);
                                         System.out.println("Project updated successfully. Here are the details:");
-                                        ProjectView.displayProject(project2, currentUser);
+                                        ProjectView.displayManagedProject(project2);
                                     } catch (Exception e) {
                                         System.out.println("Error: " + e.getMessage());
                                     }
@@ -149,17 +149,22 @@ public class ManagerInterface extends BaseInterface {
                                 default:
                                     System.out.println("Invalid choice.");
                             }
+                            break;
 
                         case 3:
                             System.out.println("Enter the project name you want to toggle: ");
                             String name3 = sc.nextLine();
                             Project project3 = projectService.findProjectByName(name3);
-                            if (project3 != null) {
-                                managerService.shiftVisibility(project3);
-                                System.out.println("Project visibility shifted successfully.");
-                            }
-                            else
+                            if (project3 == null) {
                                 System.out.println("Project not found.");
+                                break;
+                            }
+                            if (!managerService.checkAuthForProject(project3)) {
+                                System.out.println("You are not authorized to edit this project.");
+                                break;
+                            }
+                            managerService.shiftVisibility(project3);
+                            System.out.println("Project visibility shifted successfully.");
                             break;
 
                         case 4:
@@ -188,42 +193,60 @@ public class ManagerInterface extends BaseInterface {
                     }
                     System.out.println("Below are registrations.");
                     RegistrationView.displayRegistrations(registrations);
-                    System.out.println("Enter the registration ID you want to approve or reject: ");
-                    int registrationId = sc.nextInt();
-                    sc.nextLine();
-                    Registration registration = managerService.findById(registrationId);
-                    if (registration == null) {
-                        System.out.println("Invalid registration ID.");
-                        break;
-                    }
-                    boolean canApprove = registration.getProject().getOfficerSlots() > 0;
-                    if (canApprove) {
-                        System.out.println("1 - Approve");
-                        System.out.println("2 - Reject");
-                    }
-                    else {
-                        System.out.println("1 - Reject (No officer slots available)");
-                    }
+                    System.out.println("1 - Approve or reject registration");
+                    System.out.println("2 - Back");
                     System.out.println("Enter your choice: ");
-                    int action = sc.nextInt();
+                    choice = sc.nextInt();
                     sc.nextLine();
 
-                    try {
-                        if (canApprove && action == 1) {
-                            managerService.approveRegistration(registration);
-                            System.out.println("Registration approved successfully.");
-                        }
-                        else if (action == 1 || action == 2) {
-                            managerService.rejectRegistration(registration);
-                            System.out.println("Registration rejected successfully.");
-                        }
-                        else {
+                    switch (choice) {
+                        case 1:
+                            System.out.println("Enter the registration ID you want to approve or reject: ");
+                            int registrationId = sc.nextInt();
+                            sc.nextLine();
+
+                            try {
+                            Registration registration = managerService.findById(registrationId);
+                            if (registration == null)
+                                throw (new IllegalArgumentException("Registration not found."));
+                            if (registration.getStatus().equals(Registration.Status.APPROVED)){
+                                throw (new IllegalArgumentException("Registration is already approved."));
+                            }
+
+                            boolean canApprove = registration.getProject().getOfficerSlots() > 0;
+                            if (canApprove) {
+                                System.out.println("1 - Approve");
+                                System.out.println("2 - Reject");
+                            }
+                            else {
+                                System.out.println("1 - Reject (No officer slots available)");
+                            }
+                            System.out.println("Enter your choice: ");
+                            int action = sc.nextInt();
+                            sc.nextLine();
+
+                                if (canApprove && action == 1) {
+                                    managerService.approveRegistration(registration);
+                                    System.out.println("Registration approved successfully.");
+                                }
+                                else if (action == 1 || action == 2) {
+                                    managerService.rejectRegistration(registration);
+                                    System.out.println("Registration rejected successfully.");
+                                }
+                                else {
+                                    System.out.println("Invalid choice.");
+                                }
+                            } catch (IllegalArgumentException e) {
+                                System.out.println("Error: " + e.getMessage());
+                            }
+                            break;
+                        case 2:
+                            break;
+                        default:
                             System.out.println("Invalid choice.");
-                        }
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Error: " + e.getMessage());
                     }
                     break;
+
 
                 case 3:
                     List<Application> applications = managerService.getApplications();
@@ -267,6 +290,7 @@ public class ManagerInterface extends BaseInterface {
                                 default:
                                     System.out.println("Invalid choice.");
                             }
+                            break;
 
                         case 2:
                             System.out.println("Enter the user NRIC you want to approve or reject: ");
@@ -298,6 +322,7 @@ public class ManagerInterface extends BaseInterface {
                             }
                             break;
                     }
+                    break;
 
                 case 4:
                     List<Applicant> applicants = managerService.getApplicantsForReport();
@@ -345,10 +370,12 @@ public class ManagerInterface extends BaseInterface {
                 case 6: // change password
                     AuthService authService = new AuthService();
                     System.out.println("Enter your old password: ");
-                    String oldPassword = sc.nextLine();
+                    String oldPassword = sc.next();
+                    sc.nextLine();
                     if (authService.checkUser(currentUser.getNric(), oldPassword)) {
                         System.out.println("Enter your new password: ");
-                        String newPassword = sc.nextLine();
+                        String newPassword = sc.next();
+                        sc.nextLine();
                         if (newPassword != null && !newPassword.trim().isEmpty()) {
                             authService.changePassword(currentUser, newPassword);
                             System.out.println("Password changed successfully.");

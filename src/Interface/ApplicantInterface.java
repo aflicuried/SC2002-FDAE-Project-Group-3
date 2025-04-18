@@ -153,39 +153,44 @@ public class ApplicantInterface extends BaseInterface {
                     break;
 
                 case 6: // edit or delete enquiry
-                    List<Enquiry> enquiries = applicantService.getEnquiries();
-                    if (enquiries.isEmpty()) {
-                        System.out.println("No enquiries found.");
-                        break;
-                    }
-                    System.out.println("Here are your enquiries: ");
-                    EnquiryView.displayEnquiries(enquiries);
-                    System.out.println("Enter enquiry ID to edit or delete: ");
-                    int enquiryId = sc.nextInt();
-                    sc.nextLine();
+                    try {
+                        List<Enquiry> enquiries = applicantService.getEnquiries();
+                        if (enquiries.isEmpty()) {
+                            throw (new IllegalArgumentException("No enquiries found."));
+                        }
+                        System.out.println("Here are your enquiries: ");
+                        EnquiryView.displayEnquiries(enquiries);
+                        System.out.println("Enter enquiry ID to edit or delete: ");
+                        int enquiryId = sc.nextInt();
+                        sc.nextLine();
 
-                    Enquiry enquiry = applicantService.getEnquiry(enquiryId);
-                    if (enquiry == null) {
-                        System.out.println("Invalid enquiry ID.");
-                        break;
-                    }
-                    System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                        Enquiry enquiry = applicantService.getEnquiry(enquiryId);
+                        if (enquiry == null) {
+                            throw (new IllegalArgumentException("Invalid enquiry ID."));
+                        }
+                        if (enquiry.getResponse() != null) {
+                            throw new IllegalArgumentException("This enquiry has already been replied.");
+                        }
+                        System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
 
-                    switch (choice) {
-                        case 1:
-                            System.out.println("Enter new enquiry message: ");
-                            String newQuery = sc.nextLine();
-                            applicantService.editEnquiry(newQuery, enquiry);
-                            System.out.println("Enquiry edited successfully.");
-                            break;
-                        case 2:
-                            applicantService.deleteEnquiry(enquiry);
-                            System.out.println("Enquiry deleted successfully.");
-                            break;
-                        case 3:
-                            break;
+                        switch (choice) {
+                            case 1:
+                                System.out.println("Enter new enquiry message: ");
+                                String newQuery = sc.nextLine();
+                                applicantService.editEnquiry(newQuery, enquiry);
+                                System.out.println("Enquiry edited successfully.");
+                                break;
+                            case 2:
+                                applicantService.deleteEnquiry(enquiry);
+                                System.out.println("Enquiry deleted successfully.");
+                                break;
+                            case 3:
+                                break;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
                     break;
 

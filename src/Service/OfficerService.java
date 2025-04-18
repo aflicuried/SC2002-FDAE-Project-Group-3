@@ -5,6 +5,7 @@ import Database.EnquiryDatabase;
 import Database.ProjectDatabase;
 import Database.RegistrationDatabase;
 import Entity.*;
+import View.ApplicationView;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -93,13 +94,23 @@ public class OfficerService extends ApplicantService implements IOfficerService{
             throw new IllegalArgumentException("Applicant or application not found.");
         }
         if (application.getProject().equals(project)
-                && application.getStatus() == Application.ApplicationStatus.SUCCESSFUL) {
-            application.setStatus(Application.ApplicationStatus.BOOKED);
-            return;
+                && application.getStatus() != Application.ApplicationStatus.SUCCESSFUL) {
+            throw new IllegalArgumentException("No successful application found for this applicant.");
         }
-        throw new IllegalArgumentException("No successful application found for this applicant.");
+        application.setStatus(Application.ApplicationStatus.BOOKED);
+        Project bookedProject = application.getProject();
+        if (application.getFlatType() == Application.FlatType.TWO_ROOM) {
+            bookedProject.set2RoomUnits(bookedProject.get2RoomUnits() - 1);
+        }
+        else if (application.getFlatType() == Application.FlatType.THREE_ROOM) {
+            bookedProject.set3RoomUnits(bookedProject.get3RoomUnits() - 1);
+        }
+        ApplicationView.generateReceipt(application);
     }
 
+
+
+    //
     public Project getProjectHandling() {
         return officer.getProjectHandling();//better to get from officer, or projectDatabase?
     }
@@ -115,6 +126,9 @@ public class OfficerService extends ApplicantService implements IOfficerService{
 
     public void replyEnquiry(int id, String reply) {
         Enquiry enquiry = enquiryDatabase.findById(id);
+        if (enquiry.getResponse() != null) {
+            throw new IllegalArgumentException("This enquiry has already been replied.");
+        }
         enquiry.setResponse(reply);
     }
 
@@ -124,5 +138,5 @@ public class OfficerService extends ApplicantService implements IOfficerService{
             return false;
         }
         return super.isAvailableToBookFlat();
-    }//need updates: more than 1 application?
+    }
 }

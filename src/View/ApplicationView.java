@@ -1,6 +1,8 @@
 package View;
 
 import Entity.Application;
+import Entity.Project;
+
 import java.util.List;
 
 public class ApplicationView {
@@ -30,5 +32,16 @@ public class ApplicationView {
 
     public static void generateReport(List<Application> applications) {
         applications.forEach(a -> generate(a));
+    }
+
+    public static void generateReceipt(Application application) {
+        if (application.getStatus() == Application.ApplicationStatus.BOOKED) {
+            System.out.println("Applicant Name: " + application.getUser().getName());
+            System.out.println("NRIC: " + application.getUser().getNric());
+            System.out.println("Age: " + application.getUser().getAge());
+            System.out.println("Marital Status: " + application.getUser().getMaritalStatus());
+            System.out.println("Flat Type: " + application.getFlatType());
+            ProjectView.displayManagedProject(application.getProject());
+        }
     }
 }

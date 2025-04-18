@@ -107,8 +107,7 @@ public class OfficerInterface extends BaseInterface {
                         System.out.println("Here is your project: ");
                         Project project = officerService.getProject();
                         ProjectView.displayProject(project, currentUser);
-                    }
-                    else
+                    } else
                         System.out.println("You have not applied for a project.");
                     break;
 
@@ -118,7 +117,7 @@ public class OfficerInterface extends BaseInterface {
                             System.out.println("You can book a flat now.");
                         } else
                             System.out.println("Application must be SUCCESSFUL to book.");
-                    }catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
                     break;
@@ -157,39 +156,44 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 6: // edit enquiry
-                    List<Enquiry> enquiries = officerService.getEnquiries();
-                    if (enquiries.isEmpty()) {
-                        System.out.println("No enquiries found.");
-                        break;
-                    }
-                    System.out.println("Here are your enquiries: ");
-                    EnquiryView.displayEnquiries(enquiries);
-                    System.out.println("Enter enquiry ID to edit: ");
-                    int enquiryId = sc.nextInt();
-                    sc.nextLine();
+                    try {
+                        List<Enquiry> enquiries = officerService.getEnquiries();
+                        if (enquiries.isEmpty()) {
+                            throw (new IllegalArgumentException("No enquiries found."));
+                        }
+                        System.out.println("Here are your enquiries: ");
+                        EnquiryView.displayEnquiries(enquiries);
+                        System.out.println("Enter enquiry ID to edit: ");
+                        int enquiryId = sc.nextInt();
+                        sc.nextLine();
 
-                    Enquiry enquiry = officerService.getEnquiry(enquiryId);
-                    if (enquiry == null) {
-                        System.out.println("Invalid enquiry ID.");
-                        break;
-                    }
-                    System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                        Enquiry enquiry = officerService.getEnquiry(enquiryId);
+                        if (enquiry == null) {
+                            throw (new IllegalArgumentException("Invalid enquiry ID."));
+                        }
+                        if (enquiry.getResponse() != null) {
+                            throw new IllegalArgumentException("This enquiry has already been replied.");
+                        }
+                        System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
 
-                    switch (choice) {
-                        case 1:
-                            System.out.println("Enter new enquiry message: ");
-                            String newQuery = sc.nextLine();
-                            officerService.editEnquiry(newQuery, enquiry);
-                            System.out.println("Enquiry edited successfully.");
-                            break;
-                        case 2:
-                            officerService.deleteEnquiry(enquiry);
-                            System.out.println("Enquiry deleted successfully.");
-                            break;
-                        case 3:
-                            break;
+                        switch (choice) {
+                            case 1:
+                                System.out.println("Enter new enquiry message: ");
+                                String newQuery = sc.nextLine();
+                                officerService.editEnquiry(newQuery, enquiry);
+                                System.out.println("Enquiry edited successfully.");
+                                break;
+                            case 2:
+                                officerService.deleteEnquiry(enquiry);
+                                System.out.println("Enquiry deleted successfully.");
+                                break;
+                            case 3:
+                                break;
+                        }
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
                     break;
 
@@ -233,18 +237,16 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 10: // manage application
-                    Project managedProject = officerService.getProjectHandling();
-                    if (managedProject == null) {
-                        System.out.println("You are not managing any project.");
-                        break;
-                    }
-
-                    System.out.println("Enter applicant NRIC: ");
-                    String nric = sc.nextLine();
-
                     try {
+                        Project managedProject = officerService.getProjectHandling();
+                        if (managedProject == null) {
+                            throw (new IllegalArgumentException("You are not managing any project."));
+                        }
+                        System.out.println("Enter applicant NRIC: ");
+                        String nric = sc.nextLine();
+
                         officerService.bookApplication(nric, managedProject);
-                        System.out.println("Application set to BOOKED successfully.");
+                        System.out.println("Application set to BOOKED successfully.\n");
                     } catch (IllegalArgumentException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
@@ -267,8 +269,7 @@ public class OfficerInterface extends BaseInterface {
                                 System.out.println("Enter enquiry ID to reply: ");
                                 int replyId = sc.nextInt();
                                 sc.nextLine();
-
-                                System.out.println("Enter your reply.");
+                                System.out.println("Enter your reply:");
                                 String reply = sc.nextLine();
                                 officerService.replyEnquiry(replyId, reply);
                                 System.out.println("Reply successfully.");

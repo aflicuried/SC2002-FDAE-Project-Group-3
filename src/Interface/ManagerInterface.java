@@ -335,35 +335,38 @@ public class ManagerInterface extends BaseInterface {
                     break;
 
                 case 5:
-                    List<Enquiry> enquiries = managerService.getEnquiries();
-                    if (enquiries.isEmpty()) {
-                        System.out.println("No enquiries found.");
-                        break;
-                    }
-                    System.out.println("Here are the enquiries: ");
-                    EnquiryView.displayEnquiries(enquiries);
-                    System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    try {
+                        List<Enquiry> enquiries = managerService.getEnquiries();
+                        if (enquiries.isEmpty()) {
+                            throw (new IllegalArgumentException("No enquiries found."));
+                        }
+                        System.out.println("Here are the enquiries: ");
+                        EnquiryView.displayEnquiries(enquiries);
+                        System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
+                        choice = sc.nextInt();
+                        sc.nextLine();
 
-                    switch (choice) {
-                        case 1:
-                            System.out.println("Enter the Enquiry ID you want to reply: ");
-                            int enquiryId = sc.nextInt();
-                            sc.nextLine();
-                            if(!managerService.checkAuthForEnquiry(enquiryId)){
-                                System.out.println("You are not authorized to reply this enquiry.");
+                        switch (choice) {
+                            case 1:
+                                System.out.println("Enter the Enquiry ID you want to reply: ");
+                                int enquiryId = sc.nextInt();
+                                sc.nextLine();
+                                if (!managerService.checkAuthForEnquiry(enquiryId)) {
+                                    System.out.println("You are not authorized to reply this enquiry.");
+                                    break;
+                                }
+                                System.out.println("Enter your reply:");
+                                String reply = sc.nextLine();
+                                managerService.replyEnquiry(enquiryId, reply);
+                                System.out.println("Reply successfully.");
                                 break;
-                            }
-                            System.out.println("Enter your reply.");
-                            String reply = sc.nextLine();
-                            managerService.replyEnquiry(enquiryId, reply);
-                            System.out.println("Reply successfully.");
-                            break;
-                        case 2:
-                            break;
-                        default:
-                            System.out.println("Invalid choice.");
+                            case 2:
+                                break;
+                            default:
+                                System.out.println("Invalid choice.");
+                        }
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
                     break;
 

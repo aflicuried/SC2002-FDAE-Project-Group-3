@@ -4,6 +4,9 @@ import Entity.*;
 import Service.*;
 import View.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ManagerInterface extends BaseInterface {
@@ -15,6 +18,7 @@ public class ManagerInterface extends BaseInterface {
         super(currentUser);//in this case, for currentUser: reference - User; object - roles
         this.managerService = new ManagerService((HDBManager) currentUser);
         this.projectService = new ProjectService();
+        super.setProjectService(this.projectService);
     }
 
     @Override
@@ -29,23 +33,26 @@ public class ManagerInterface extends BaseInterface {
             System.out.println("5 - Manage Enquiries"); //1 reply to enquiries he/she is handling
             System.out.println("6 - Change password");
             System.out.println("7 - Log out");
-            System.out.println("Enter your choice: ");
-
-            choice = sc.nextInt();
-            sc.nextLine();
+            choice = readIntInput("Enter your choice: ");
 
             switch (choice) {
                 case 1:
-                    ProjectView.displayManagedList(projectService.findAllProjects());
+                    List<Project> projects = projectService.findAllProjects();
+                    System.out.println(filterSettings.getFilterSummary());
+                    projects = applyProjectFilters(projects);
+
+                    if (projects.isEmpty()) {
+                        System.out.println("Project not found");
+                    }
+
+                    ProjectView.displayManagedList(projects);
                     System.out.println("1 - Create A New Project");
                     System.out.println("2 - Edit or Delete A Project");
                     System.out.println("3 - Toggle visibility of a Project");
                     System.out.println("4 - Filter projects you created");
-                    System.out.println("5 - Back");
-                    System.out.println("Enter your choice: ");
-
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    System.out.println("5 - Manage Filters");
+                    System.out.println("6 - Back");
+                    choice = readIntInput("Enter your choice: ");
 
                     switch (choice) {
                         case 1:
@@ -54,40 +61,38 @@ public class ManagerInterface extends BaseInterface {
                             String projectName = sc.next();
                             System.out.println("Neighbourhood: ");
                             String neighbourhood = sc.next();
-                            System.out.println("# of Units of 2-Room Flat Type:");
-                            int UnitsOf2Room = sc.nextInt();
-                            sc.nextLine();
-                            System.out.println("2-room Flat Price:");
-                            int PriceOf2Room = sc.nextInt();
-                            sc.nextLine();
-                            System.out.println("# of Units of 3-Room Flat Type:");
-                            int UnitsOf3Room = sc.nextInt();
-                            sc.nextLine();
-                            System.out.println("3-room Flat Price:");
-                            int PriceOf3Room = sc.nextInt();
-                            sc.nextLine();
+                            int UnitsOf2Room = readIntInput("# of Units of 2-Room Flat Type:");
+                            int PriceOf2Room = readIntInput("2-room Flat Price:");
+                            int UnitsOf3Room = readIntInput("# of Units of 3-Room Flat Type:");
+                            int PriceOf3Room = readIntInput("3-room Flat Price:");
                             System.out.println("Application Opening Date (format: yyyy/M/d, e.g. 2000/1/30):");
-                            String openingDate = sc.nextLine();
+                            String openingDateStr = sc.nextLine();
                             System.out.println("Application Closing Date (format: yyyy/M/d, e.g. 2000/1/30):");
-                            String closingDate = sc.nextLine();
+                            String closingDateStr = sc.nextLine();
                             System.out.println("Available HDB Officer Slots:"); //need 'confirm details' and EH.
                             int officerSlots = sc.nextInt();
                             sc.nextLine();
 
                             try {
+                                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/M/d");
+                                LocalDate openingDate = LocalDate.parse(openingDateStr, formatter);
+                                LocalDate closingDate = LocalDate.parse(closingDateStr, formatter);
+
+                                if (managerService.hasProjectConflict(openingDate, closingDate)) {
+                                    throw (new Exception("You are already managing a project during this period."));
+                                }
+
                                 Project project = managerService.createProject(projectName,
                                         neighbourhood, UnitsOf2Room, PriceOf2Room,
-                                        UnitsOf3Room, PriceOf3Room, openingDate, closingDate,
+                                        UnitsOf3Room, PriceOf3Room, openingDateStr, closingDateStr,
                                         officerSlots, currentUser);
                                 System.out.println("Confirm Details:");
                                 ProjectView.displayManagedProject(project);
 
                                 System.out.println("1 - Create Project");
                                 System.out.println("2 - Back");
-                                System.out.println("Enter your choice: ");
+                                choice = readIntInput("Enter your choice: ");
 
-                                choice = sc.nextInt();
-                                sc.nextLine();
 
                                 switch (choice) {
                                     case 1:
@@ -118,9 +123,7 @@ public class ManagerInterface extends BaseInterface {
                                 break;
                             }
                             System.out.println("Edit or Delete:\n1 - Edit\n2 - Delete");
-
-                            choice = sc.nextInt();
-                            sc.nextLine();
+                            choice = readIntInput("Enter your choice: ");
 
                             switch (choice) {
                                 case 1:
@@ -130,9 +133,7 @@ public class ManagerInterface extends BaseInterface {
                                             "5 - 3-Room available units\n6 - 3-Room flat price\n" +
                                             "7 - Application Opening Date\n8 - Application Closing Date\n" +
                                             "9 - officer slots");
-
-                                    choice = sc.nextInt();
-                                    sc.nextLine();
+                                    choice = readIntInput("Enter your choice: ");
 
                                     try {
                                         managerService.editProject(choice, project2);
@@ -168,16 +169,20 @@ public class ManagerInterface extends BaseInterface {
                             break;
 
                         case 4:
-                            List<Project> projects = projectService.findByManager(currentUser.getName());
-                            if (projects.isEmpty()) {
+                            List<Project> projects2 = projectService.findByManager(currentUser.getName());
+                            if (projects2.isEmpty()) {
                                 System.out.println("Project not found.");
                                 break;
                             }
                             System.out.println("Here are the projects you created:");
-                            ProjectView.displayProjectList(projects, currentUser);
+                            ProjectView.displayProjectList(projects2, currentUser);
                             break;
 
                         case 5:
+                            manageFilters();
+                            break;
+
+                        case 6:
                             break;
 
                         default:
@@ -195,9 +200,7 @@ public class ManagerInterface extends BaseInterface {
                     RegistrationView.displayRegistrations(registrations);
                     System.out.println("1 - Approve or reject registration");
                     System.out.println("2 - Back");
-                    System.out.println("Enter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    choice = readIntInput("Enter your choice: ");
 
                     switch (choice) {
                         case 1:
@@ -206,30 +209,29 @@ public class ManagerInterface extends BaseInterface {
                             sc.nextLine();
 
                             try {
-                            Registration registration = managerService.findById(registrationId);
-                            if (registration == null)
-                                throw (new IllegalArgumentException("Registration not found."));
-                            if (registration.getStatus().equals(Registration.Status.APPROVED)){
-                                throw (new IllegalArgumentException("Registration is already approved."));
-                            }
+                                Registration registration = managerService.findById(registrationId);
+                                if (registration == null)
+                                    throw (new IllegalArgumentException("Registration not found."));
+                                if (registration.getStatus().equals(Registration.Status.APPROVED)){
+                                    throw (new IllegalArgumentException("Registration is already approved."));
+                                }
 
-                            boolean canApprove = registration.getProject().getOfficerSlots() > 0;
-                            if (canApprove) {
-                                System.out.println("1 - Approve");
-                                System.out.println("2 - Reject");
-                            }
-                            else {
-                                System.out.println("1 - Reject (No officer slots available)");
-                            }
-                            System.out.println("Enter your choice: ");
-                            int action = sc.nextInt();
-                            sc.nextLine();
+                                boolean canApprove = registration.getProject().getOfficerSlots() > 0;
+                                if (canApprove) {
+                                    System.out.println("1 - Approve");
+                                    System.out.println("2 - Reject");
+                                }
+                                else {
+                                    System.out.println("1 - Reject (No officer slots available)");
+                                }
+                                int choice = readIntInput("Enter your choice: ");
 
-                                if (canApprove && action == 1) {
+
+                                if (canApprove && choice == 1) {
                                     managerService.approveRegistration(registration);
                                     System.out.println("Registration approved successfully.");
                                 }
-                                else if (action == 1 || action == 2) {
+                                else if (choice == 1 || choice == 2) {
                                     managerService.rejectRegistration(registration);
                                     System.out.println("Registration rejected successfully.");
                                 }
@@ -257,9 +259,7 @@ public class ManagerInterface extends BaseInterface {
                     System.out.println("Below are applications.");
                     ApplicationView.displayApplications(applications);
                     System.out.println("1 - approve or reject application\n2 - approve or reject withdrawal");
-
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    choice = readIntInput("Enter your choice: ");
 
                     switch (choice) {
                         case 1:
@@ -275,8 +275,7 @@ public class ManagerInterface extends BaseInterface {
                                 break;
                             }
                             System.out.println("Approve or Reject:\n1 - Approve\n2 - Reject");
-                            choice = sc.nextInt();
-                            sc.nextLine();
+                            choice = readIntInput("Enter your choice: ");
 
                             switch (choice) {
                                 case 1:
@@ -305,8 +304,7 @@ public class ManagerInterface extends BaseInterface {
                                 break;
                             }
                             System.out.println("Approve or Reject:\n1 - Approve\n2 - Reject");
-                            choice = sc.nextInt();
-                            sc.nextLine();
+                            choice = readIntInput("Enter your choice: ");
 
                             switch (choice) {
                                 case 1:
@@ -321,18 +319,59 @@ public class ManagerInterface extends BaseInterface {
                                     System.out.println("Invalid choice.");
                             }
                             break;
+                        default:
+                            System.out.println("Invalid choice.");
                     }
                     break;
 
                 case 4:
-                    List<Applicant> applicants = managerService.getApplicantsForReport();
+                    System.out.println("Generate reports based on:");
+                    System.out.println("1 - All applicants");
+                    System.out.println("2 - By flat type");
+                    System.out.println("3 - By project");
+                    System.out.println("4 - By age");
+                    System.out.println("5 - By marital status");
+                    choice = readIntInput("Enter your choice: ");
+
+                    List<Applicant> applicants = new ArrayList<>();
+
+                    switch (choice) {
+                        case 1:
+                            applicants = managerService.getApplicantsForReport(null, null);
+                            break;
+                        case 2:
+                            System.out.println("Enter flat type (TWO_ROOM/THREE_ROOM): ");
+                            String flatType = sc.nextLine();
+                            applicants = managerService.getApplicantsForReport("flatType", flatType);
+                            break;
+                        case 3:
+                            System.out.println("Enter project name: ");
+                            String projectName = sc.nextLine();
+                            applicants = managerService.getApplicantsForReport("projectName", projectName);
+                            break;
+                        case 4:
+                            System.out.println("Enter age: ");
+                            String age = sc.nextLine();
+                            applicants = managerService.getApplicantsForReport("age", age);
+                            break;
+                        case 5:
+                            System.out.println("Enter marital status (SINGLE/MARRIED): ");
+                            String status = sc.nextLine();
+                            applicants = managerService.getApplicantsForReport("maritalStatus", status);
+                            break;
+                        default:
+                            System.out.println("Invalid choice.");
+                            break;
+                    }
+
                     if(applicants.isEmpty()) {
-                        System.out.println("No approved applicants found.");
+                        System.out.println("No approved applicants found with these criteria.");
                         break;
                     }
-                    System.out.println("Below is a report of the list of applicants.");
-                    UserView.displayApplicants(applicants);//NEED FILTER!
+                    System.out.println("Below is a report of the filtered list of applicants.");
+                    UserView.displayApplicants(applicants);
                     break;
+
 
                 case 5:
                     try {
@@ -342,9 +381,8 @@ public class ManagerInterface extends BaseInterface {
                         }
                         System.out.println("Here are the enquiries: ");
                         EnquiryView.displayEnquiries(enquiries);
-                        System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
-                        choice = sc.nextInt();
-                        sc.nextLine();
+                        System.out.println("1 - Reply\n2 - Back");
+                        choice = readIntInput("Enter your choice: ");
 
                         switch (choice) {
                             case 1:
@@ -352,8 +390,7 @@ public class ManagerInterface extends BaseInterface {
                                 int enquiryId = sc.nextInt();
                                 sc.nextLine();
                                 if (!managerService.checkAuthForEnquiry(enquiryId)) {
-                                    System.out.println("You are not authorized to reply this enquiry.");
-                                    break;
+                                    throw (new IllegalArgumentException("You are not authorized to reply this enquiry."));
                                 }
                                 System.out.println("Enter your reply:");
                                 String reply = sc.nextLine();

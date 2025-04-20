@@ -5,7 +5,9 @@ import Database.EnquiryDatabase;
 import Database.ProjectDatabase;
 import Database.UserDatabase;
 import Entity.*;
+import util.DateUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,12 +31,22 @@ public class ApplicantService implements IApplicantService {
     }
 
     //
-    public List<Project> getVisibleProjects() {
+    /*public List<Project> getVisibleProjects() {
         return projectDatabase.findProjects().stream()
                 .filter(Project::isVisible)
                 .filter(this::isEligibleForProject)
                 .collect(Collectors.toList());
+    }*/
+    public List<Project> getVisibleProjects() {
+        LocalDate today = DateUtil.getCurrentDate();
+
+        return projectDatabase.findProjects().stream()
+                .filter(Project::isVisible)
+                .filter(p -> !today.isBefore(p.getOpeningDate()) && !today.isAfter(p.getClosingDate()))
+                .filter(this::isEligibleForProject)
+                .collect(Collectors.toList());
     }
+
     public boolean isEligibleForProject(Project project) {
         if (!project.isVisible())
             return false;

@@ -8,12 +8,14 @@ import View.UserView;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) {
 
-        Scanner scanner = new Scanner(System.in);
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
         UserDatabase userDatabase = UserDatabase.getInstance(); //Singleton pattern
         ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
 
@@ -29,18 +31,17 @@ public class Main {
         while(true) {
             //UserDatabase userDatabase = UserDatabase.getInstance(); //Singleton pattern
             //ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
-
+            System.out.println("Welcome to BTO Management System!");//also can read by console
             System.out.println("1 - Login");
             System.out.println("2 - Exit");
-            System.out.println("Enter your choice: ");
+            int choice = readIntInput("Enter your choice: ");
 
-            switch (scanner.nextInt()) {
+            switch (choice) {
                 case 1:
                     scanner.nextLine();
 
                     //start app
                     AuthService authService = new AuthService();
-                    System.out.println("Welcome to BTO Management System!");//also can read by console
                     System.out.print("Enter your NRIC number: ");
                     String inputNRIC = scanner.nextLine();
                     while (!authService.isValidNRIC(inputNRIC)) {
@@ -74,6 +75,20 @@ public class Main {
 
                 default:
                     System.out.println("Invalid choice");
+            }
+        }
+    }
+
+    private static int readIntInput(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            try {
+                int input = scanner.nextInt();
+                scanner.nextLine();
+                return input;
+            } catch (InputMismatchException e) {
+                scanner.nextLine();
+                System.out.println("Error: Please enter a valid number.");
             }
         }
     }

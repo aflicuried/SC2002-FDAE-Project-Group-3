@@ -16,6 +16,7 @@ public class ApplicantInterface extends BaseInterface {
         super(currentUser);    //in this case, for currentUser: reference - User; object - roles
         this.applicantService = new ApplicantService((Applicant) currentUser);
         this.projectService = new ProjectService();
+        super.setProjectService(this.projectService);
     }
 
     public void start() {
@@ -30,26 +31,25 @@ public class ApplicantInterface extends BaseInterface {
             System.out.println("6 - Edit or Delete Enquiries");
             System.out.println("7 - Change password");
             System.out.println("8 - Log Out");
-            System.out.println("Enter your choice: ");
 
-            choice = sc.nextInt();
-            sc.nextLine();
+            choice = readIntInput("Enter your choice: ");
 
             switch (choice) {
 
                 case 1:
                     List<Project> projects = applicantService.getVisibleProjects(); //handle eligible projects
+
+                    System.out.println(filterSettings.getFilterSummary());
+                    projects = applyProjectFilters(projects);
                     if (projects.isEmpty()) {
                         System.out.println("Project not found");
-                        break;
                     }
+
                     ProjectView.displayProjectList(projects, currentUser); // whether to display 2-room or 3-room in every project
                     System.out.println("1 - Apply A Project");
-                    System.out.println("2 - Back");
-                    System.out.println("Enter your choice: ");
-
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    System.out.println("2 - Manage Filters");
+                    System.out.println("3 - Back");
+                    choice = readIntInput("Enter your choice: ");
 
                     switch (choice) {
                         case 1:
@@ -68,21 +68,20 @@ public class ApplicantInterface extends BaseInterface {
                             try {
                                 System.out.println("Select flat type: ");
                                 System.out.println("1 - 2-Room");
-                                if (applicantService.isSingle())
+                                if (!applicantService.isSingle())
                                     System.out.println("2 - 3-Room");
-                                int flatType = sc.nextInt();
-                                sc.nextLine();
+                                int flatType = readIntInput("Enter your choice: ");
+
                                 Application application = applicantService.newApplication(project, flatType);
                                 if (application == null) {
-                                    System.out.println("Invalid Application.");
+                                    throw (new IllegalArgumentException("Invalid Application."));
                                 }
                                 System.out.println("Confirm application details: ");
                                 ApplicationView.displayApplication(application);
                                 System.out.println("1 - Send Application");
                                 System.out.println("2 - Back");
-                                System.out.println("Enter your choice: ");
-                                choice = sc.nextInt();
-                                sc.nextLine();
+                                choice = readIntInput("Enter your choice: ");
+
                                 if (choice == 1) {
                                     applicantService.sendApplication(application);
                                     System.out.println("Application submitted successfully.");
@@ -92,6 +91,9 @@ public class ApplicantInterface extends BaseInterface {
                             }
                             break;
                         case 2:
+                            manageFilters();
+                            break;
+                        case 3:
                             break;
                         default:
                             System.out.println("Invalid choice");
@@ -129,27 +131,27 @@ public class ApplicantInterface extends BaseInterface {
                     break;
 
                 case 5: // submit an enquiry
-                    projects = applicantService.getVisibleProjects();
-                    if (projects.isEmpty()) {
-                        System.out.println("Project not found.");
-                        break;
+                    try {
+                        projects = applicantService.getVisibleProjects();
+                        if (projects.isEmpty())
+                            throw (new IllegalArgumentException("Project not found."));
+
+                        ProjectView.displayProjectList(projects, currentUser);
+                        System.out.println("Enter the project name you want to enquire about: ");
+                        String name = sc.nextLine();
+                        Project enqProject = projectService.findProjectByName(name);
+                        if (enqProject == null)
+                            throw (new IllegalArgumentException("Project not found."));
+                        if (!applicantService.isEligibleForProject(enqProject))
+                            throw (new IllegalArgumentException("You are not allowed to enquire about this project."));
+
+                        System.out.println("Enter your enquiry: ");
+                        String query = sc.nextLine();
+                        applicantService.submitEnquiry(query, enqProject);
+                        System.out.println("Enquiry submitted successfully.");
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
-                    ProjectView.displayProjectList(projects, currentUser);
-                    System.out.println("Enter the project name you want to enquire about: ");
-                    String name = sc.nextLine();
-                    Project enqProject = projectService.findProjectByName(name);
-                    if (enqProject == null){
-                        System.out.println("Project not found");
-                        break;
-                    }
-                    if(!applicantService.isEligibleForProject(enqProject)) {
-                        System.out.println("You are not allowed to enquire about this project.");
-                        break;
-                    }
-                    System.out.println("Enter your enquiry: ");
-                    String query = sc.nextLine();
-                    applicantService.submitEnquiry(query, enqProject);
-                    System.out.println("Enquiry submitted successfully.");
                     break;
 
                 case 6: // edit or delete enquiry
@@ -171,9 +173,8 @@ public class ApplicantInterface extends BaseInterface {
                         if (enquiry.getResponse() != null) {
                             throw new IllegalArgumentException("This enquiry has already been replied.");
                         }
-                        System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
-                        choice = sc.nextInt();
-                        sc.nextLine();
+                        System.out.println("1 - Edit\n2 - Delete\n3 - Back");
+                        choice = readIntInput("Enter your choice: ");
 
                         switch (choice) {
                             case 1:

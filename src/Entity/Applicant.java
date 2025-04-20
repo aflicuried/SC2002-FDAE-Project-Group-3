@@ -17,7 +17,7 @@ public class Applicant extends User {
         this.flatType = null;
     }
 
-    public boolean isSingle() { return super.getMaritalStatus().equals("Single"); }
+    public boolean isSingle() { return super.getMaritalStatus().equals("SINGLE"); }
     public Project getProject() {
         return project;
     }

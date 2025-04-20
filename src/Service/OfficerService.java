@@ -6,7 +6,9 @@ import Database.ProjectDatabase;
 import Database.RegistrationDatabase;
 import Entity.*;
 import View.ApplicationView;
+import util.DateUtil;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ public class OfficerService extends ApplicantService implements IOfficerService{
     }
 
     //methods
+
     @Override
     public List<Project> getVisibleProjects() {
         if (officer.getProjectHandling() != null){
@@ -41,16 +44,56 @@ public class OfficerService extends ApplicantService implements IOfficerService{
                 .collect(Collectors.toList());
     }
 
-    public List<Project> getProjectsForRegi() {
+    /*public List<Project> getProjectsForRegi() {
         if (officer.getApplication() == null){
             return projectDatabase.findProjects();
         }
         return projectDatabase.findProjects()
                 .stream().filter(p -> !p.getName().equals(officer.getApplication().getProject().getName()))
                 .collect(Collectors.toList());
+    }*/
+    public List<Project> getProjectsForRegi() {
+        LocalDate today = DateUtil.getCurrentDate();
+
+        List<Project> eligibleProjects = projectDatabase.findProjects().stream()
+                .filter(p -> !today.isBefore(p.getOpeningDate()) && !today.isAfter(p.getClosingDate()))
+                .collect(Collectors.toList());
+
+        // cancel out project that officer has applied for
+        if (officer.getApplication() != null) {
+            Project appliedProject = officer.getApplication().getProject();
+            eligibleProjects = eligibleProjects.stream()
+                    .filter(p -> !p.getName().equals(appliedProject.getName()))
+                    .collect(Collectors.toList());
+        }
+
+        // cancel out project that officer is handling and has date clash
+        if (officer.getProjectHandling() != null) {
+            Project handlingProject = officer.getProjectHandling();
+            eligibleProjects = eligibleProjects.stream()
+                    .filter(p -> !DateUtil.hasDateOverlap(
+                            p.getOpeningDate(), p.getClosingDate(),
+                            handlingProject.getOpeningDate(), handlingProject.getClosingDate()))
+                    .collect(Collectors.toList());
+        }
+
+        // cancel out project that officer has registered but not rejected
+        List<Registration> registrations = registrationDatabase.findByOfficerNric(officer.getNric());
+        for (Registration reg : registrations) {
+            if (reg.getStatus() != Registration.Status.REJECTED) {
+                Project regProject = reg.getProject();
+                eligibleProjects = eligibleProjects.stream()
+                        .filter(p -> !DateUtil.hasDateOverlap(
+                                p.getOpeningDate(), p.getClosingDate(),
+                                regProject.getOpeningDate(), regProject.getClosingDate()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return eligibleProjects;
     }
 
-    public void submitRegistration(String projectName) {
+    /*public void submitRegistration(String projectName) {
         Project project = projectDatabase.findProjectByName(projectName);
         if (project == null) {
             throw new IllegalArgumentException("Project not found.");
@@ -61,6 +104,38 @@ public class OfficerService extends ApplicantService implements IOfficerService{
         if (!registrationDatabase.findByOfficerNric(officer.getNric()).isEmpty()) { // actually there are some problems.
             throw new IllegalArgumentException("You have already sent registrations."); // if >1 registrations?
         }
+        Registration registration = new Registration(officer, project, Registration.Status.PENDING);
+        registrationDatabase.addRegistration(registration);
+    }*/
+
+    public void submitRegistration(String projectName) {
+        Project project = projectDatabase.findProjectByName(projectName);
+        if (project == null) {
+            throw new IllegalArgumentException("Project not found.");
+        }
+
+        // check if the officer is handling
+        if (officer.getProjectHandling() != null) {
+            Project handlingProject = officer.getProjectHandling();
+            if (DateUtil.hasDateOverlap(
+                    project.getOpeningDate(), project.getClosingDate(),
+                    handlingProject.getOpeningDate(), handlingProject.getClosingDate())) {
+                throw new IllegalArgumentException("You are already managing a project during this period.");
+            }
+        }
+
+        // check if the existing one has clash with new one
+        List<Registration> registrations = registrationDatabase.findByOfficerNric(officer.getNric());
+        for (Registration reg : registrations) {
+            Project regProject = reg.getProject();
+            if (reg.getStatus() != Registration.Status.REJECTED &&
+                    DateUtil.hasDateOverlap(
+                            project.getOpeningDate(), project.getClosingDate(),
+                            regProject.getOpeningDate(), regProject.getClosingDate())) {
+                throw new IllegalArgumentException("You already have a pending or approved registration during this period.");
+            }
+        }
+
         Registration registration = new Registration(officer, project, Registration.Status.PENDING);
         registrationDatabase.addRegistration(registration);
     }

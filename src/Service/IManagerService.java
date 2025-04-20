@@ -2,11 +2,14 @@ package Service;
 
 import Entity.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface IManagerService {
+    boolean hasProjectConflict(LocalDate openingDate, LocalDate closingDate);
     Project createProject(String projectName, String neighbourhood, int room2, int price2,
                           int room3, int price3, String opening, String closing, int slots, User user);
+
     boolean checkAuthForProject(Project project);
     void editProject(int choice, Project project);
     void shiftVisibility(Project project);
@@ -24,7 +27,8 @@ public interface IManagerService {
     void approveWithdrawal(Application application);
     void rejectWithdrawal(Application application);
 
-    List<Applicant> getApplicantsForReport();
+    //List<Applicant> getApplicantsForReport();
+    List<Applicant> getApplicantsForReport(String filterType, String filterValue);
 
     List<Enquiry> getEnquiries();
     boolean checkAuthForEnquiry(int id);

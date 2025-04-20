@@ -17,6 +17,7 @@ public class OfficerInterface extends BaseInterface {
         super(currentUser);//in this case, for currentUser: reference - User; object - Applicant/Officer/...
         this.officerService = new OfficerService((HDBOfficer) currentUser);
         this.projectService = new ProjectService();
+        super.setProjectService(this.projectService);
     }
 
     public void start() {
@@ -38,24 +39,23 @@ public class OfficerInterface extends BaseInterface {
             System.out.println("11 - Reply to Enquiries");
             System.out.println("12 - Change Password");
             System.out.println("13 - Log Out");
-            System.out.println("Enter your choice: ");
-
-            int choice = sc.nextInt();
-            sc.nextLine();
+            choice = readIntInput("Enter your choice: ");
 
             switch (choice) {
                 case 1:
                     List<Project> projects = officerService.getVisibleProjects();
+
+                    System.out.println(filterSettings.getFilterSummary());
+                    projects = applyProjectFilters(projects);
                     if (projects.isEmpty()) {
-                        System.out.println("Project not found");
-                        break;
+                        System.out.println("Project not found.");
                     }
+
                     ProjectView.displayProjectList(projects, currentUser);
                     System.out.println("1 - Apply for a Project");
-                    System.out.println("2 - Back");
-                    System.out.println("Enter your choice: ");
-                    choice = sc.nextInt();
-                    sc.nextLine();
+                    System.out.println("2 - Manage Filters");
+                    System.out.println("3 - Back");
+                    choice = readIntInput("Enter your choice: ");
 
                     switch (choice) {
                         case 1:
@@ -74,19 +74,17 @@ public class OfficerInterface extends BaseInterface {
                             try {
                                 System.out.println("Select flat type: ");
                                 System.out.println("1 - 2-Room");
-                                if (officerService.isSingle())
+                                if (!officerService.isSingle())
                                     System.out.println("2 - 3-Room");
-                                int flatType = sc.nextInt();
-                                sc.nextLine();
+                                int flatType = readIntInput("Enter your choice: ");
                                 Application application = officerService.newApplication(project, flatType);
 
                                 System.out.println("Confirm application details: ");
                                 ApplicationView.displayApplication(application);
                                 System.out.println("1 - Send Application");
                                 System.out.println("2 - Back");
-                                System.out.println("Enter your choice: ");
-                                choice = sc.nextInt();
-                                sc.nextLine();
+                                choice = readIntInput("Enter your choice: ");
+
                                 if (choice == 1) {
                                     officerService.sendApplication(application);
                                     System.out.println("Application submitted successfully.");
@@ -96,6 +94,9 @@ public class OfficerInterface extends BaseInterface {
                             }
                             break;
                         case 2:
+                            manageFilters();
+                            break;
+                        case 3:
                             break;
                         default:
                             System.out.println("Invalid choice");
@@ -131,28 +132,28 @@ public class OfficerInterface extends BaseInterface {
                     }
                     break;
 
-                case 5: // submit enquiry
-                    projects = officerService.getVisibleProjects();
-                    if (projects.isEmpty()) {
-                        System.out.println("Project not found.");
-                        break;
+                case 5: // submit an enquiry
+                    try {
+                        projects = officerService.getVisibleProjects();
+                        if (projects.isEmpty())
+                            throw (new IllegalArgumentException("Project not found."));
+
+                        ProjectView.displayProjectList(projects, currentUser);
+                        System.out.println("Enter the project name you want to enquire about: ");
+                        String enqName = sc.nextLine();
+                        Project enqProject = projectService.findProjectByName(enqName);
+                        if (enqProject == null)
+                            throw (new IllegalArgumentException("Project not found."));
+                        if (!officerService.isEligibleForProject(enqProject))
+                            throw (new IllegalArgumentException("You are not allowed to enquire about this project."));
+
+                        System.out.println("Enter your enquiry: ");
+                        String query = sc.nextLine();
+                        officerService.submitEnquiry(query, enqProject);
+                        System.out.println("Enquiry submitted successfully.");
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("Error: " + e.getMessage());
                     }
-                    ProjectView.displayProjectList(projects, currentUser);
-                    System.out.println("Enter the project name you want to enquire about: ");
-                    String enqName = sc.nextLine();
-                    Project enqProject = projectService.findProjectByName(enqName);
-                    if (enqProject == null) {
-                        System.out.println("Project not found.");
-                        break;
-                    }
-                    if (!officerService.isEligibleForProject(enqProject)) {
-                        System.out.println("You are not allowed to enquire about this project.");
-                        break;
-                    }
-                    System.out.println("Enter your enquiry: ");
-                    String query = sc.nextLine();
-                    officerService.submitEnquiry(query, enqProject);
-                    System.out.println("Enquiry submitted successfully.");
                     break;
 
                 case 6: // edit enquiry
@@ -174,9 +175,8 @@ public class OfficerInterface extends BaseInterface {
                         if (enquiry.getResponse() != null) {
                             throw new IllegalArgumentException("This enquiry has already been replied.");
                         }
-                        System.out.println("1 - Edit\n2 - Delete\n3 - Back\nEnter your choice: ");
-                        choice = sc.nextInt();
-                        sc.nextLine();
+                        System.out.println("1 - Edit\n2 - Delete\n3 - Back");
+                        choice = readIntInput("Enter your choice: ");
 
                         switch (choice) {
                             case 1:
@@ -198,17 +198,29 @@ public class OfficerInterface extends BaseInterface {
                     break;
 
                 case 7:
-                    List<Project> projects2 = officerService.getProjectsForRegi();
-                    if (projects2.isEmpty()) {
-                        System.out.println("Project for registration not found");
-                        break;
-                    }
-                    System.out.println("Here are the projects you can register: ");
-                    ProjectView.displayManagedList(projects2);
-
-                    System.out.println("Enter the project name to register for: ");
-                    String regProjectName = sc.nextLine();
                     try {
+                        List<Project> projects2 = officerService.getProjectsForRegi();
+                        if (projects2.isEmpty()) {
+                            throw (new IllegalArgumentException("No eligible projects found for registration"));
+                        }
+                        System.out.println("Here are the projects you can register: ");
+                        ProjectView.displayManagedList(projects2);
+
+                        System.out.println("Enter the project name to register for: ");
+                        String regProjectName = sc.nextLine();
+
+                        // get the project
+                        Project selectedProject = projectService.findProjectByName(regProjectName);
+                        if (selectedProject == null) {
+                            throw new IllegalArgumentException("Project not found.");
+                        }
+
+                        // check if officer can register
+                        if (!projects2.contains(selectedProject)) {
+                            throw new IllegalArgumentException("You are not eligible to register for this project.");
+                        }
+
+                        // register
                         officerService.submitRegistration(regProjectName);
                         System.out.println("Registration submitted successfully.");
                     } catch (IllegalArgumentException e) {
@@ -243,10 +255,11 @@ public class OfficerInterface extends BaseInterface {
                             throw (new IllegalArgumentException("You are not managing any project."));
                         }
                         System.out.println("Enter applicant NRIC: ");
-                        String nric = sc.nextLine();
+                        String nric = sc.next();
+                        sc.nextLine();
 
                         officerService.bookApplication(nric, managedProject);
-                        System.out.println("Application set to BOOKED successfully.\n");
+                        System.out.println("Application set to BOOKED successfully.");
                     } catch (IllegalArgumentException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
@@ -260,15 +273,12 @@ public class OfficerInterface extends BaseInterface {
 
                         System.out.println("Enquiries for your project: ");
                         EnquiryView.displayEnquiries(projectEnquiries);
-                        System.out.println("1 - Reply\n2 - Back\nEnter your choice: ");
-                        choice = sc.nextInt();
-                        sc.nextLine();
+                        System.out.println("1 - Reply\n2 - Back");
+                        choice = readIntInput("Enter your choice: ");
 
                         switch (choice) {
                             case 1:
-                                System.out.println("Enter enquiry ID to reply: ");
-                                int replyId = sc.nextInt();
-                                sc.nextLine();
+                                int replyId = readIntInput("Enter enquiry ID to reply: ");
                                 System.out.println("Enter your reply:");
                                 String reply = sc.nextLine();
                                 officerService.replyEnquiry(replyId, reply);

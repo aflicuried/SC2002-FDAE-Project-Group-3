@@ -2,6 +2,7 @@ package Service;
 
 import Database.*;
 import Entity.*;
+import util.DateUtil;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +35,14 @@ public class ManagerService implements IManagerService {
 
         Project project = new Project(projectName, neighbourhood, flatTypes, openingDate, closingDate, (HDBManager) user, slots, new ArrayList<>());
         return project;
+    }
+    public boolean hasProjectConflict(LocalDate openingDate, LocalDate closingDate) {
+        List<Project> managedProjects = projectDatabase.findByManager(manager.getName());
+
+        return managedProjects.stream()
+                .anyMatch(p -> DateUtil.hasDateOverlap(
+                        openingDate, closingDate,
+                        p.getOpeningDate(), p.getClosingDate()));
     }
 
     public boolean checkAuthForProject(Project project) {
@@ -173,12 +182,39 @@ public class ManagerService implements IManagerService {
     }
 
     //
-    public List<Applicant> getApplicantsForReport() {
-        return userDatabase.findApplicants()
-                .stream().filter(a -> a.getApplication() != null)
-                        .filter(a -> a.getApplication().getStatus().equals(Application.ApplicationStatus.SUCCESSFUL) ||
-                                a.getApplication().getStatus().equals(Application.ApplicationStatus.BOOKED))
-                        .collect(Collectors.toList());
+    public List<Applicant> getApplicantsForReport(String filterType, String filterValue) {
+        List<Applicant> applicants = userDatabase.findApplicants()
+                .stream()
+                .filter(a -> a.getApplication() != null)
+                .filter(a -> a.getApplication().getStatus().equals(Application.ApplicationStatus.SUCCESSFUL) ||
+                        a.getApplication().getStatus().equals(Application.ApplicationStatus.BOOKED))
+                .collect(Collectors.toList());
+
+        if (filterType != null && filterValue != null) {
+            switch (filterType) {
+                case "flatType":
+                    return applicants.stream()
+                            .filter(a -> a.getApplication().getFlatType().toString().equals(filterValue))
+                            .collect(Collectors.toList());
+                case "projectName":
+                    return applicants.stream()
+                            .filter(a -> a.getApplication().getProject().getName().equals(filterValue))
+                            .collect(Collectors.toList());
+                case "age":
+                    int age = Integer.parseInt(filterValue);
+                    return applicants.stream()
+                            .filter(a -> a.getAge() == age)
+                            .collect(Collectors.toList());
+                case "maritalStatus":
+                    return applicants.stream()
+                            .filter(a -> a.getMaritalStatus().equals(filterValue))
+                            .collect(Collectors.toList());
+                default:
+                    return applicants;
+            }
+        }
+
+        return applicants;
     }
 
     //
@@ -191,6 +227,9 @@ public class ManagerService implements IManagerService {
     }
     public void replyEnquiry(int id, String reply) {
         Enquiry enquiry = enquiryDatabase.findById(id);
+        if (enquiry.getResponse() != null) {
+            throw new IllegalArgumentException("This enquiry has already been replied.");
+        }
         enquiry.setResponse(reply);
     }
 }

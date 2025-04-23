@@ -13,6 +13,11 @@ import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Abstract base class for all user interface types (e.g., ApplicantInterface, OfficerInterface).
+ * Provides shared functionality such as filter management, input reading,
+ * password changing, and project filtering.
+ */
 public abstract class BaseInterface {
     Scanner sc = new Scanner(System.in);
     final User currentUser;
@@ -20,11 +25,20 @@ public abstract class BaseInterface {
     protected FilterSettings filterSettings;
     protected IProjectService projectService;
 
+    /**
+     * Constructs a BaseInterface with the given user.
+     * @param currentUser the currently logged-in user
+     */
     public BaseInterface(User currentUser) {
         this.currentUser = currentUser;
         this.filterSettings = new FilterSettings();
     }
 
+    /**
+     * Reads an integer input from the user with validation.
+     * @param prompt the message to prompt the user
+     * @return the valid integer input
+     */
     protected int readIntInput(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -39,6 +53,13 @@ public abstract class BaseInterface {
         }
     }
 
+    
+    /**
+     * Prompts the user for a date and parses it into a LocalDate.
+     * Expected format: yyyy/M/d
+     * @param prompt the prompt message
+     * @return the parsed LocalDate
+     */
     protected LocalDate parseDate(String prompt) {
         while (true) {
             System.out.println(prompt);
@@ -52,12 +73,26 @@ public abstract class BaseInterface {
         }
     }
 
+
+    /**
+     * Starts the user interface. Each subclass must implement its own interface logic.
+     */
     public abstract void start();
 
+
+    /**
+     * Sets the project service used for filtering and project operations.
+     * @param projectService the project service to set
+     */
     protected void setProjectService(IProjectService projectService) {
         this.projectService = projectService;
     }
 
+
+    /**
+     * Allows the user to change their password if the old password is verified.
+     * @return true if password change was successful, false otherwise
+     */
     protected boolean changePassword() {
         AuthService authService = new AuthService();
         System.out.println("Enter your old password: ");
@@ -81,6 +116,10 @@ public abstract class BaseInterface {
         return false;
     }
 
+
+    /**
+     * Provides a console menu to manage filters applied to project listings.
+     */
     protected void manageFilters() {
         while (true) {
             System.out.println("\nProject Filter Settings:");
@@ -197,6 +236,12 @@ public abstract class BaseInterface {
         }
     }
 
+
+    /**
+     * Applies the current set of filters to a list of projects using the project service.
+     * @param projects the original list of projects
+     * @return a filtered list of projects
+     */
     protected List<Project> applyProjectFilters(List<Project> projects) {
         if (projectService == null) {
             System.out.println("Warning: Project service not set. Filters will not be applied.");

@@ -8,11 +8,24 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * ManagerInterface provides the command-line interface functionalities 
+ * available to HDB Managers. It enables managers to manage projects, 
+ * registrations, applications, generate reports, and handle enquiries.
+ */
+
 public class ManagerInterface extends BaseInterface {
 
     private final IManagerService managerService;
     private final IProjectService projectService;
 
+
+    /**
+     * ManagerInterface provides the command-line interface functionalities 
+     * available to HDB Managers. It enables managers to manage projects, 
+     * registrations, applications, generate reports, and handle enquiries.
+     */
     public ManagerInterface(User currentUser) {
         super(currentUser);//in this case, for currentUser: reference - User; object - roles
         this.managerService = new ManagerService((HDBManager) currentUser);
@@ -51,6 +64,10 @@ public class ManagerInterface extends BaseInterface {
     }
 
     //case 1: create project
+    /**
+     * Gathers user input to create a new housing project, checks for conflicts, 
+     * and adds the project through the project service if confirmed.
+     */
     public void createAProject() {
         try {
             System.out.println("Enter information.");
@@ -93,6 +110,10 @@ public class ManagerInterface extends BaseInterface {
         }
     }
     //case 1: edit or delete a project
+    /**
+     * Allows the manager to edit attributes of or delete an existing project 
+     * after verifying authorization and project existence.
+     */
     public void editOrDeleteProject() {
         System.out.println("Enter project name: ");
         String name = sc.nextLine();
@@ -133,6 +154,10 @@ public class ManagerInterface extends BaseInterface {
         }
     }
     //case 1: toggle visibility
+    /**
+     * Toggles the visibility (active/inactive) status of a project managed 
+     * by the current user.
+     */
     public void toggleVisibility() {
         System.out.println("Enter the project name you want to toggle: ");
         String name3 = sc.nextLine();
@@ -149,6 +174,9 @@ public class ManagerInterface extends BaseInterface {
         System.out.println("Project visibility shifted successfully.");
     }
     //case 1: filter projects the manager created
+    /**
+     * Displays the list of housing projects created by the current manager.
+     */
     public void filterProjectsManagerCreated() {
         List<Project> projects = projectService.findByManager(currentUser.getName());
         if (projects.isEmpty()) {
@@ -160,6 +188,10 @@ public class ManagerInterface extends BaseInterface {
     }
 
     //case 2
+    /**
+     * Allows the manager to view all registrations and approve or reject 
+     * individual ones, based on availability and status.
+     */
     public void manageRegistrations() {
         List<Registration> registrations = managerService.getRegistrations();
         if (registrations.isEmpty()) {
@@ -212,6 +244,10 @@ public class ManagerInterface extends BaseInterface {
     }
 
     //case 3
+    /**
+     * Displays all pending or approved applications and allows the manager 
+     * to either approve/reject applications or handle withdrawal requests.
+     */
     public void manageApplications() {
         List<Application> applications = managerService.getApplications();
         if (applications.isEmpty()) {
@@ -229,6 +265,10 @@ public class ManagerInterface extends BaseInterface {
         }
     }
     //case 3: approve or reject application
+    /**
+     * Enables the manager to approve or reject a specific application 
+     * based on the applicant's NRIC and application status.
+     */
     public void approveOrRejectApplication() {
         System.out.println("Enter the user NRIC you want to approve or reject: ");
         String NRIC = sc.nextLine();
@@ -257,6 +297,10 @@ public class ManagerInterface extends BaseInterface {
         }
     }
     //case 3: approve or reject withdrawal
+    /**
+     * Allows the manager to approve or reject an applicant's withdrawal request 
+     * based on NRIC, if the application is marked as a withdrawal.
+     */
     public void approveOrRejectWithdrawal() {
         System.out.println("Enter the user NRIC you want to approve or reject: ");
         String NRIC2 = sc.nextLine();
@@ -286,6 +330,10 @@ public class ManagerInterface extends BaseInterface {
     }
 
     //case 4
+    /**
+     * Generates various reports on approved applicants filtered by 
+     * flat type, project, age, or marital status.
+     */
     public void generateReports() {
         System.out.println("Generate reports based on:");
         System.out.println("1 - All applicants");
@@ -330,6 +378,11 @@ public class ManagerInterface extends BaseInterface {
         UserView.displayApplicants(applicants);
     }
 
+
+    /**
+     * Displays enquiries assigned to the manager and provides functionality 
+     * to reply to specific enquiries if authorized.
+     */
     public void manageEnquiries() {
         try {
             List<Enquiry> enquiries = managerService.getEnquiries();
@@ -362,6 +415,11 @@ public class ManagerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Main entry point for the manager interface menu loop. Displays the 
+     * menu options and routes input to the corresponding functions.
+     */
     @Override
     public void start() {
         while(true) {

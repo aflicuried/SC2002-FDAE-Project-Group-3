@@ -9,19 +9,32 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Singleton class for managing registration records between HDB Officers and Projects.
+ * Handles loading from and saving to a CSV file.
+ */
 public class RegistrationDatabase {
     private static final RegistrationDatabase instance = new RegistrationDatabase();
     private List<Registration> registrations = new ArrayList<>();
-    private static int nextId = 1000; // init ID
+    private static int nextId = 1000;
     private static final String FILE_PATH = "data/RegistrationList.csv";
 
     private RegistrationDatabase() {}
 
+    /**
+     * Returns the singleton instance of the RegistrationDatabase.
+     *
+     * @return the RegistrationDatabase instance
+     */
     public static RegistrationDatabase getInstance() {
         return instance;
     }
 
-    // read registrations.csv
+    /**
+     * Loads registration data from the CSV file into memory.
+     *
+     * @throws IOException if an I/O error occurs while reading the file
+     */
     public void loadData() throws IOException {
         registrations.clear();
         File file = new File(FILE_PATH);
@@ -49,10 +62,11 @@ public class RegistrationDatabase {
                     HDBOfficer officer = (HDBOfficer) UserDatabase.getInstance().findByNric(officerNric);
                     Project project = ProjectDatabase.getInstance().findProjectByName(projectName);
                     Registration.Status status;
+
                     try {
                         status = Registration.Status.valueOf(statusStr);
                     } catch (IllegalArgumentException e) {
-                        continue;
+                        continue; // Skip invalid enum value
                     }
 
                     if (officer != null && project != null && officer.getName().equals(officerName)) {
@@ -66,7 +80,11 @@ public class RegistrationDatabase {
         }
     }
 
-    // write into registrations.csv
+    /**
+     * Saves all current registration records to the CSV file.
+     *
+     * @throws IOException if an I/O error occurs while writing the file
+     */
     public void saveData() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             writer.write("ID,Officer NRIC,Officer Name,Project Name,Status");
@@ -85,23 +103,43 @@ public class RegistrationDatabase {
         }
     }
 
+    /**
+     * Returns all registrations in memory.
+     *
+     * @return list of Registration objects
+     */
     public List<Registration> findAll() {
         return registrations;
     }
 
-    // add registration
+    /**
+     * Adds a new registration to the database and assigns a unique ID.
+     *
+     * @param registration the Registration object to add
+     */
     public void addRegistration(Registration registration) {
         registration.setId(nextId++);
         registrations.add(registration);
     }
 
-    // find by Officer NRIC
+    /**
+     * Finds all registrations associated with a specific HDB officer's NRIC.
+     *
+     * @param nric the NRIC of the officer
+     * @return list of matching Registration objects
+     */
     public List<Registration> findByOfficerNric(String nric) {
         return registrations.stream()
                 .filter(r -> r.getOfficer().getNric().equals(nric))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Finds a registration by its unique ID.
+     *
+     * @param id the ID of the registration
+     * @return the matching Registration object, or null if not found
+     */
     public Registration findById(int id) {
         return registrations.stream()
                 .filter(r -> r.getId() == id)

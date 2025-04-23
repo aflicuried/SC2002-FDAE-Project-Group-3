@@ -15,10 +15,6 @@ public class Project {
     private int officerSlots;
     private List<HDBOfficer> officers;
 
-    private List<Application> applications = new ArrayList<>();
-    private List<Enquiry> enquiries = new ArrayList<>();
-
-
     public Project(String name, String neighbourhood, List<FlatType> flatTypes, LocalDate openingDate, LocalDate closingDate, HDBManager manager,
                    int officerSlots, List<HDBOfficer> officers) {
         this.name = name;
@@ -62,8 +58,6 @@ public class Project {
     public HDBManager getManager() { return manager; }
     public int getOfficerSlots() { return officerSlots; }
     public List<HDBOfficer> getOfficers() { return officers; }
-    public List<Application> getApplications() { return applications; }
-    public List<Enquiry> getEnquiries() { return enquiries; }
 
     //setters
     public void setName(String name) { this.name = name; }

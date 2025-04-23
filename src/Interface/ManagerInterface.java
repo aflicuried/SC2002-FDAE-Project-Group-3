@@ -5,8 +5,6 @@ import Service.*;
 import View.*;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,9 +55,9 @@ public class ManagerInterface extends BaseInterface {
         try {
             System.out.println("Enter information.");
             System.out.println("Project Name: ");
-            String projectName = sc.next();
+            String projectName = sc.nextLine();
             System.out.println("Neighbourhood: ");
-            String neighbourhood = sc.next();
+            String neighbourhood = sc.nextLine();
             int UnitsOf2Room = readIntInput("# of Units of 2-Room Flat Type:");
             int PriceOf2Room = readIntInput("2-room Flat Price:");
             int UnitsOf3Room = readIntInput("# of Units of 3-Room Flat Type:");

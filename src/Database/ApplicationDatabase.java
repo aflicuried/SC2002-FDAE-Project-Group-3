@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class ApplicationDatabase {
     private static final ApplicationDatabase instance = new ApplicationDatabase();
     private List<Application> applications = new ArrayList<>();
-    private static final String FILE_PATH = "applications.csv";
+    private static final String FILE_PATH = "data/ApplicationList.csv";
 
     private ApplicationDatabase() {}
 
@@ -29,7 +29,12 @@ public class ApplicationDatabase {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
                 String[] parts = line.split(",", -1);//keep empty field
                 if (parts.length >= 5) {
                     String userNric = parts[0];
@@ -42,7 +47,6 @@ public class ApplicationDatabase {
                     User user = UserDatabase.getInstance().findByNric(userNric);
                     Project project = ProjectDatabase.getInstance().findProjectByName(projectName);
 
-                    // 解析枚举
                     Application.ApplicationStatus status;
                     try {
                         status = Application.ApplicationStatus.valueOf(statusStr);
@@ -70,6 +74,9 @@ public class ApplicationDatabase {
     // write applications.csv
     public void saveData() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            writer.write("Applicant NRIC,Project Name,Status,Flat Type,Withdrawal");
+            writer.newLine();
+
             for (Application application : applications) {
                 String line = String.format("%s,%s,%s,%s,%b",
                         application.getUser().getNric(),
@@ -114,10 +121,10 @@ public class ApplicationDatabase {
                 .collect(Collectors.toList());
     }
 
-    // find to extend
+    /* find to extend
     public List<Application> findBy(Predicate<Application> predicate) {
         return applications.stream()
                 .filter(predicate)
                 .collect(Collectors.toList());
-    }
+    }*/
 }

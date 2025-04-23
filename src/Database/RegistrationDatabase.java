@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 public class RegistrationDatabase {
     private static final RegistrationDatabase instance = new RegistrationDatabase();
     private List<Registration> registrations = new ArrayList<>();
-    private static int nextId = 1000; // 初始 ID
-    private static final String FILE_PATH = "registrations.csv";
+    private static int nextId = 1000; // init ID
+    private static final String FILE_PATH = "data/RegistrationList.csv";
 
     private RegistrationDatabase() {}
 
@@ -31,7 +31,13 @@ public class RegistrationDatabase {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
+
                 String[] parts = line.split(",", -1);
                 if (parts.length >= 5) {
                     int id = Integer.parseInt(parts[0]);
@@ -63,6 +69,9 @@ public class RegistrationDatabase {
     // write into registrations.csv
     public void saveData() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            writer.write("ID,Officer NRIC,Officer Name,Project Name,Status");
+            writer.newLine();
+
             for (Registration registration : registrations) {
                 String line = String.format("%d,%s,%s,%s,%s",
                         registration.getId(),

@@ -1,8 +1,8 @@
+import Database.*;
+import Entity.Application;
 import Interface.BaseInterface;
 import Interface.InterfaceFactory;
 import Entity.User;
-import Database.ProjectDatabase;
-import Database.UserDatabase;
 import Service.AuthService;
 
 import javax.naming.AuthenticationException;
@@ -17,14 +17,20 @@ public class Main {
     public static void main(String[] args) {
         UserDatabase userDatabase = UserDatabase.getInstance(); //Singleton pattern
         ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
+        RegistrationDatabase registrationDatabase = RegistrationDatabase.getInstance();
+        ApplicationDatabase applicationDatabase = ApplicationDatabase.getInstance();
+        EnquiryDatabase enquiryDatabase = EnquiryDatabase.getInstance();
 
         //load data
         try {
             userDatabase.loadData();
             projectDatabase.loadData();
+            registrationDatabase.loadData();
+            applicationDatabase.loadData();
+            enquiryDatabase.loadData();
 
         } catch (IOException e) {
-            System.out.println("Error loading data" + e.getMessage());
+            System.out.println("Error loading data: " + e.getMessage());
         }
 
         while(true) {
@@ -58,7 +64,8 @@ public class Main {
                         BaseInterface baseInterface = InterfaceFactory.getInterface(currentUser);
                         baseInterface.start();
 
-                        //write data back to CSV!
+                        //write data back to CSV
+                        saveData();
 
                     } catch (AuthenticationException e) {
                         System.out.println("Error: " + e.getMessage());
@@ -82,6 +89,20 @@ public class Main {
                 scanner.nextLine();
                 System.out.println("Please enter a valid number.");
             }
+        }
+    }
+
+    private static void saveData() {
+        try {
+            // Save all database changes to their respective files
+            ProjectDatabase.getInstance().saveData();
+            RegistrationDatabase.getInstance().saveData();
+            ApplicationDatabase.getInstance().saveData();
+            EnquiryDatabase.getInstance().saveData();
+            System.out.println("All data saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Error saving data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

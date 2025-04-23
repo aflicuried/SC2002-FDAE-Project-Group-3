@@ -5,9 +5,7 @@ import Entity.HDBManager;
 import Entity.HDBOfficer;
 import Entity.Project;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -19,13 +17,14 @@ public class ProjectDatabase {
     private List<Project> projects = new ArrayList<>();
     private ProjectDatabase() {}    //private constructor; to avoid external instantiation
     private UserDatabase userDatabase = UserDatabase.getInstance();
+    private static final String FILE_PATH = "data/ProjectList.csv";
 
     public static ProjectDatabase getInstance() {
         return instance;
     }
 
     public void loadData() throws IOException {
-        projects = readProjects("data/ProjectList.csv");
+        projects = readProjects(FILE_PATH);
     }
 
     public List<Project> readProjects(String filePath) throws IOException {
@@ -87,6 +86,57 @@ public class ProjectDatabase {
         }
         br.close();
         return projects;
+    }
+
+    public void saveData() throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            // Write header line
+            writer.write("Project Name,Neighbourhood,Type 1,Number of units for Type 1,Selling price for Type 1," +
+                    "Type 2,Number of units for Type 2,Selling price for Type 2," +
+                    "Application opening date,Application closing date,Manager,Officer Slots,Officer");
+            writer.newLine();
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/M/d");
+
+            for (Project project : projects) {
+                // 处理 officers 列表，所有 officer 名字放在一个带引号的字符串中，用逗号分隔
+                StringBuilder officersStr = new StringBuilder();
+                List<HDBOfficer> officerList = project.getOfficers();
+                if (officerList != null && !officerList.isEmpty()) {
+                    officersStr.append("\"");
+                    boolean firstOfficer = true;
+                    for (HDBOfficer officer : officerList) {
+                        if (officer != null) {
+                            if (!firstOfficer) {
+                                officersStr.append(",");
+                            }
+                            officersStr.append(officer.getName());
+                            firstOfficer = false;
+                        }
+                    }
+                    officersStr.append("\"");
+                }
+
+                // Format the project data according to the CSV structure
+                String line = String.format("%s,%s,%s,%d,%d,%s,%d,%d,%s,%s,%s,%d,%s",
+                        project.getName(),
+                        project.getNeighbourhood(),
+                        "2-Room",  // Type 1 is always 2-Room
+                        project.get2RoomUnits(),
+                        project.get2RoomPrice(),
+                        "3-Room",  // Type 2 is always 3-Room
+                        project.get3RoomUnits(),
+                        project.get3RoomPrice(),
+                        project.getOpeningDate().format(formatter),
+                        project.getClosingDate().format(formatter),
+                        project.getManager().getName(),
+                        project.getOfficerSlots(),
+                        officersStr.toString());
+
+                writer.write(line);
+                writer.newLine();
+            }
+        }
     }
 
     public List<Project> findProjects() {

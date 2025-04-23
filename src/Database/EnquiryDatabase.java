@@ -14,7 +14,7 @@ public class EnquiryDatabase {
     private static final EnquiryDatabase instance = new EnquiryDatabase();
     private List<Enquiry> enquiries = new ArrayList<>();
     private static int nextId = 10000;
-    private static final String FILE_PATH = "enquiries.csv";
+    private static final String FILE_PATH = "data/EnquiryList.csv";
 
     private EnquiryDatabase() {}
 
@@ -31,7 +31,12 @@ public class EnquiryDatabase {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
+            boolean isHeader = true;
             while ((line = reader.readLine()) != null) {
+                if (isHeader) {
+                    isHeader = false;
+                    continue;
+                }
                 String[] parts = line.split(",", -1);
                 if (parts.length >= 5) {
                     int id = Integer.parseInt(parts[0]);
@@ -59,6 +64,9 @@ public class EnquiryDatabase {
 
     public void saveData() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
+            writer.write("ID,User NRIC,Project Name,Message,Response");
+            writer.newLine();
+
             for (Enquiry enquiry : enquiries) {
                 String line = String.format("%d,%s,%s,%s,%s",
                         enquiry.getId(),

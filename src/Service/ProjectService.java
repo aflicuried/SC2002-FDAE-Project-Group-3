@@ -38,14 +38,14 @@ public class ProjectService implements IProjectService {
     public List<Project> applyFilters(List<Project> projects, FilterSettings filterSettings) {
         List<Project> filteredProjects = new ArrayList<>(projects);
 
-        // 应用地区筛选
+        // apply neighbourhood filter
         if (filterSettings.getNeighbourhood() != null) {
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.getNeighbourhood().equalsIgnoreCase(filterSettings.getNeighbourhood()))
                     .collect(Collectors.toList());
         }
 
-        // 应用房型筛选
+        // apply flat type filter
         if (filterSettings.getFlatType() != null) {
             filteredProjects = filteredProjects.stream()
                     .filter(p -> {
@@ -59,7 +59,7 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
-        // 应用价格范围筛选
+        // apply price filter
         if (filterSettings.getMinPrice() != null) {
             final int minPrice = filterSettings.getMinPrice();
             filteredProjects = filteredProjects.stream()
@@ -74,7 +74,7 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
-        // 应用日期范围筛选
+        // apply date filter
         if (filterSettings.getStartDate() != null) {
             final LocalDate startDate = filterSettings.getStartDate();
             filteredProjects = filteredProjects.stream()
@@ -89,7 +89,7 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
-        // 应用最少可用单位筛选
+        // apply available unit filter
         if (filterSettings.getMinAvailableUnits() != null) {
             final int minUnits = filterSettings.getMinAvailableUnits();
             filteredProjects = filteredProjects.stream()
@@ -97,14 +97,14 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
-        // 应用官员槽位筛选
+        // apply officer slot filter
         if (filterSettings.getHasOfficerSlots() != null && filterSettings.getHasOfficerSlots()) {
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.getOfficerSlots() > 0)
                     .collect(Collectors.toList());
         }
 
-        // 应用排序
+        // apply sorting
         switch (filterSettings.getSortType()) {
             case NAME_ASC:
                 filteredProjects.sort(Comparator.comparing(Project::getName));

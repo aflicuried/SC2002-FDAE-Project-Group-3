@@ -3,10 +3,12 @@ package Interface;
 import Entity.FilterSettings;
 import Entity.Project;
 import Entity.User;
+import Service.AuthService;
 import Service.IProjectService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
@@ -32,7 +34,20 @@ public abstract class BaseInterface {
                 return input;
             } catch (InputMismatchException e) {
                 sc.nextLine();
-                System.out.println("Error: Please enter a valid number.");
+                System.out.println("Please enter a valid number.");
+            }
+        }
+    }
+
+    protected LocalDate parseDate(String prompt) {
+        while (true) {
+            System.out.println(prompt);
+            try {
+                String date = sc.nextLine();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/M/d");
+                return LocalDate.parse(date, formatter);
+            } catch (DateTimeParseException e) {
+                System.out.println("Invalid date format, try again.");
             }
         }
     }
@@ -41,6 +56,29 @@ public abstract class BaseInterface {
 
     protected void setProjectService(IProjectService projectService) {
         this.projectService = projectService;
+    }
+
+    protected boolean changePassword() {
+        AuthService authService = new AuthService();
+        System.out.println("Enter your old password: ");
+        String oldPassword = sc.next();
+        sc.nextLine();
+        if (authService.checkUser(currentUser.getNric(), oldPassword)){
+            System.out.println("Enter your new password: ");
+            String newPassword = sc.next();
+            sc.nextLine();
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                authService.changePassword(currentUser, newPassword);
+                System.out.println("Password changed successfully.");
+                return true;
+            }
+            else
+                System.out.println("Invalid password.");
+        }
+        else {
+            System.out.println("Incorrect old password.");
+        }
+        return false;
     }
 
     protected void manageFilters() {
@@ -59,12 +97,12 @@ public abstract class BaseInterface {
             choice = readIntInput("Enter your choice: ");
 
             switch (choice) {
-                case 1:
+                case 1 -> {
                     System.out.println("Enter neighbourhood name (or leave empty to clear this filter): ");
                     String neighbourhood = sc.nextLine();
                     filterSettings.setNeighbourhood(neighbourhood.isEmpty() ? null : neighbourhood);
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     System.out.println("Select flat type filter:");
                     System.out.println("1 - 2-Room");
                     System.out.println("2 - 3-Room");
@@ -80,14 +118,14 @@ public abstract class BaseInterface {
                     } else {
                         System.out.println("Invalid choice. Filter not changed.");
                     }
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     int minPrice = readIntInput("Enter minimum price (or -1 to clear this filter): ");
                     filterSettings.setMinPrice(minPrice < 0 ? null : minPrice);
                     int maxPrice = readIntInput("Enter maximum price (or -1 to clear this filter): ");
                     filterSettings.setMaxPrice(maxPrice < 0 ? null : maxPrice);
-                    break;
-                case 4:
+                }
+                case 4 -> {
                     try {
                         System.out.println("Enter earliest application opening date (format: yyyy/M/d, or leave empty to clear): ");
                         String startDateStr = sc.nextLine();
@@ -111,12 +149,12 @@ public abstract class BaseInterface {
                     } catch (Exception e) {
                         System.out.println("Error parsing date. Please use format yyyy/M/d.");
                     }
-                    break;
-                case 5:
+                }
+                case 5 -> {
                     int minUnits = readIntInput("Enter minimum number of available units (or -1 to clear this filter): ");
                     filterSettings.setMinAvailableUnits(minUnits < 0 ? null : minUnits);
-                    break;
-                case 6:
+                }
+                case 6 -> {
                     System.out.println("Filter projects with available officer slots?");
                     System.out.println("1 - Yes (show only projects with available slots)");
                     System.out.println("2 - No (show only projects without available slots)");
@@ -132,8 +170,8 @@ public abstract class BaseInterface {
                     } else {
                         System.out.println("Invalid choice. Filter not changed.");
                     }
-                    break;
-                case 7:
+                }
+                case 7 -> {
                     System.out.println("Select sort order:");
                     FilterSettings.SortType[] sortTypes = FilterSettings.SortType.values();
                     for (int i = 0; i < sortTypes.length; i++) {
@@ -148,16 +186,13 @@ public abstract class BaseInterface {
                     } else {
                         System.out.println("Invalid choice. Sort order not changed.");
                     }
-                    break;
-                case 8:
+                }
+                case 8 -> {
                     filterSettings.resetAllFilters();
                     System.out.println("All filters have been reset.");
-                    break;
-                case 9:
-                    return;
-                default:
-                    System.out.println("Invalid choice.");
-                    break;
+                }
+                case 9 -> { return; }
+                default -> System.out.println("Invalid choice.");
             }
         }
     }
@@ -168,10 +203,10 @@ public abstract class BaseInterface {
             return projects;
         }
 
-        // 应用筛选条件并返回筛选后的项目列表
+        // apply filters
         List<Project> filteredProjects = projectService.applyFilters(projects, filterSettings);
 
-        // 给用户显示筛选结果信息
+        // show the filter
         if (filterSettings.isAnyFilterApplied()) {
             System.out.println("Applied filters: " + projects.size() + " projects filtered to " +
                     filteredProjects.size() + " projects.");

@@ -4,7 +4,6 @@ import Entity.User;
 import Database.ProjectDatabase;
 import Database.UserDatabase;
 import Service.AuthService;
-import View.UserView;
 
 import javax.naming.AuthenticationException;
 import java.io.IOException;
@@ -37,10 +36,7 @@ public class Main {
             int choice = readIntInput("Enter your choice: ");
 
             switch (choice) {
-                case 1:
-                    scanner.nextLine();
-
-                    //start app
+                case 1 -> {    //start app
                     AuthService authService = new AuthService();
                     System.out.print("Enter your NRIC number: ");
                     String inputNRIC = scanner.nextLine();
@@ -53,7 +49,7 @@ public class Main {
                     System.out.print("Enter your password: ");
                     String inputPassword = scanner.nextLine();
 
-                    try{
+                    try {
                         //reference - User; object - Roles
                         User currentUser = authService.authenticate(inputNRIC, inputPassword);
 
@@ -64,17 +60,13 @@ public class Main {
 
                         //write data back to CSV!
 
-                    } catch (AuthenticationException e){
+                    } catch (AuthenticationException e) {
                         System.out.println("Error: " + e.getMessage());
                     }
-                    break;
+                }
+                case 2 -> { return; }
 
-                case 2:
-                    scanner.nextLine();
-                    return;
-
-                default:
-                    System.out.println("Invalid choice");
+                default -> System.out.println("Invalid choice");
             }
         }
     }
@@ -88,7 +80,7 @@ public class Main {
                 return input;
             } catch (InputMismatchException e) {
                 scanner.nextLine();
-                System.out.println("Error: Please enter a valid number.");
+                System.out.println("Please enter a valid number.");
             }
         }
     }

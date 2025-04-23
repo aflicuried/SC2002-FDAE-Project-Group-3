@@ -20,7 +20,7 @@ public class InterfaceFactory { //to create "new Interface(currentUser)"
 
     public static BaseInterface getInterface(User user) {
         if (user == null) {
-            throw new IllegalArgumentException("User cannot be null");
+            throw new IllegalArgumentException("User cannot be null.");
         }
 
         Function<User, BaseInterface> creator = creators.get(user.getRole());

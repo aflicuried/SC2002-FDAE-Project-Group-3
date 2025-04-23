@@ -19,6 +19,167 @@ public class ApplicantInterface extends BaseInterface {
         super.setProjectService(this.projectService);
     }
 
+    //for case 1
+    public void viewOrApplyProjects() {
+        List<Project> projects = applicantService.getVisibleProjects();
+
+        //handle eligible projects
+        System.out.println(filterSettings.getFilterSummary());
+        projects = applyProjectFilters(projects);
+        if (projects.isEmpty()) {
+            System.out.println("Project not found.");
+        }
+
+        ProjectView.displayProjectList(projects, currentUser);
+        System.out.println("1 - Apply for a Project");
+        System.out.println("2 - Manage Filters");
+        System.out.println("3 - Back");
+        choice = readIntInput("Enter your choice: ");
+
+        switch (choice) {
+            case 1 -> {
+                if (applicantService.haveProject()) {
+                    System.out.println("You have already applied for a project.");
+                    break;
+                }
+                System.out.println("Enter project name: ");
+                String name = sc.nextLine();
+                Project project = projectService.findProjectByName(name);
+                if (project == null) {
+                    System.out.println("Project not found.");
+                    break;
+                }
+
+                try {
+                    System.out.println("Select flat type: ");
+                    System.out.println("1 - 2-Room");
+                    if (!applicantService.isSingle())
+                        System.out.println("2 - 3-Room");
+                    int flatType = readIntInput("Enter your choice: ");
+
+                    Application application = applicantService.newApplication(project, flatType);
+                    if (application == null) {
+                        throw (new IllegalArgumentException("Invalid Application."));
+                    }
+                    System.out.println("Confirm application details: ");
+                    ApplicationView.displayApplication(application);
+                    System.out.println("1 - Send Application");
+                    System.out.println("2 - Back");
+                    choice = readIntInput("Enter your choice: ");
+
+                    if (choice == 1) {
+                        applicantService.sendApplication(application);
+                        System.out.println("Application submitted successfully.");
+                    }
+                } catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+            case 2 -> manageFilters();
+            case 3 -> {}
+            default -> System.out.println("Invalid choice");
+        }
+    }
+
+    //for case 2
+    public void viewMyProjects() {
+        if (applicantService.haveProject()) {
+            System.out.println("Here is your project: ");
+            Project project = applicantService.getProject();
+            ProjectView.displayProject(project, currentUser);// down-casting!
+        }
+        else
+            System.out.println("You have not applied for a project.");
+    }
+
+    //for case 3
+    public void bookAFlat() {
+        try {
+            if (applicantService.isAvailableToBookFlat()) {
+                System.out.println("You can book a flat now.");
+            } else
+                System.out.println("Application must be SUCCESSFUL to book.");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //for case 4
+    public void withdrawApplication() {
+        try {
+            applicantService.withdrawalApplication();
+            System.out.println("Submitted withdrawal successfully.");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //for case 5
+    public void submitAnEnquiry() {
+        try {
+            List <Project> projects = applicantService.getVisibleProjects();
+            if (projects.isEmpty())
+                throw (new IllegalArgumentException("Project not found."));
+
+            ProjectView.displayProjectList(projects, currentUser);
+            System.out.println("Enter the project name you want to enquire about: ");
+            String name = sc.nextLine();
+            Project enqProject = projectService.findProjectByName(name);
+            if (enqProject == null)
+                throw (new IllegalArgumentException("Project not found."));
+            if (!applicantService.isEligibleForProject(enqProject))
+                throw (new IllegalArgumentException("You are not allowed to enquire about this project."));
+
+            System.out.println("Enter your enquiry: ");
+            String query = sc.nextLine();
+            applicantService.submitEnquiry(query, enqProject);
+            System.out.println("Enquiry submitted successfully.");
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //for case 6
+    public void editOrDeleteEnquiry() {
+        try {
+            List<Enquiry> enquiries = applicantService.getEnquiries();
+            if (enquiries.isEmpty()) {
+                throw (new IllegalArgumentException("No enquiries found."));
+            }
+            System.out.println("Here are your enquiries: ");
+            EnquiryView.displayEnquiries(enquiries);
+            System.out.println("Enter enquiry ID to edit or delete: ");
+            int enquiryId = sc.nextInt();
+            sc.nextLine();
+
+            Enquiry enquiry = applicantService.getEnquiry(enquiryId);
+            if (enquiry == null) {
+                throw (new IllegalArgumentException("Invalid enquiry ID."));
+            }
+            if (enquiry.getResponse() != null) {
+                throw new IllegalArgumentException("This enquiry has already been replied.");
+            }
+            System.out.println("1 - Edit\n2 - Delete\n3 - Back");
+            choice = readIntInput("Enter your choice: ");
+
+            switch (choice) {
+                case 1 -> {
+                    System.out.println("Enter new enquiry message: ");
+                    String newQuery = sc.nextLine();
+                    applicantService.editEnquiry(newQuery, enquiry);
+                    System.out.println("Enquiry edited successfully.");
+                }
+                case 2 -> {
+                    applicantService.deleteEnquiry(enquiry);
+                    System.out.println("Enquiry deleted successfully.");
+                }
+                case 3 -> {}
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public void start() {
         while(true) {
             System.out.println("Welcome, " + currentUser.getName() + "!");
@@ -36,192 +197,15 @@ public class ApplicantInterface extends BaseInterface {
 
             switch (choice) {
 
-                case 1:
-                    List<Project> projects = applicantService.getVisibleProjects(); //handle eligible projects
-
-                    System.out.println(filterSettings.getFilterSummary());
-                    projects = applyProjectFilters(projects);
-                    if (projects.isEmpty()) {
-                        System.out.println("Project not found");
-                    }
-
-                    ProjectView.displayProjectList(projects, currentUser); // whether to display 2-room or 3-room in every project
-                    System.out.println("1 - Apply A Project");
-                    System.out.println("2 - Manage Filters");
-                    System.out.println("3 - Back");
-                    choice = readIntInput("Enter your choice: ");
-
-                    switch (choice) {
-                        case 1:
-                            if (applicantService.haveProject()) {
-                                System.out.println("You have already applied for a project.");
-                                break;
-                            }
-                            System.out.println("Enter project name: ");
-                            String name = sc.nextLine();
-                            Project project = projectService.findProjectByName(name);
-                            if (project == null) {
-                                System.out.println("Project not found.");
-                                break;
-                            }
-
-                            try {
-                                System.out.println("Select flat type: ");
-                                System.out.println("1 - 2-Room");
-                                if (!applicantService.isSingle())
-                                    System.out.println("2 - 3-Room");
-                                int flatType = readIntInput("Enter your choice: ");
-
-                                Application application = applicantService.newApplication(project, flatType);
-                                if (application == null) {
-                                    throw (new IllegalArgumentException("Invalid Application."));
-                                }
-                                System.out.println("Confirm application details: ");
-                                ApplicationView.displayApplication(application);
-                                System.out.println("1 - Send Application");
-                                System.out.println("2 - Back");
-                                choice = readIntInput("Enter your choice: ");
-
-                                if (choice == 1) {
-                                    applicantService.sendApplication(application);
-                                    System.out.println("Application submitted successfully.");
-                                }
-                            } catch (IllegalArgumentException e) {
-                                System.out.println("Error: " + e.getMessage());
-                            }
-                            break;
-                        case 2:
-                            manageFilters();
-                            break;
-                        case 3:
-                            break;
-                        default:
-                            System.out.println("Invalid choice");
-                    }
-                    break;
-
-                case 2: // view my project
-                    if (applicantService.haveProject()) {
-                        System.out.println("Here is your project: ");
-                        Project project = applicantService.getProject();
-                        ProjectView.displayProject(project, currentUser);// down-casting!
-                    }
-                    else
-                        System.out.println("You have not applied for a project.");
-                    break;
-
-                case 3: // book a flat
-                    try {
-                        if (applicantService.isAvailableToBookFlat()) {
-                            System.out.println("You can book a flat now.");
-                        } else
-                            System.out.println("Application must be SUCCESSFUL to book.");
-                    }catch (IllegalArgumentException e) {
-                        System.out.println("Error: " + e.getMessage());
-                    }
-                    break;
-
-                case 4: // withdraw application
-                    try {
-                        applicantService.withdrawalApplication();
-                        System.out.println("Submitted withdrawal successfully.");
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Error: " + e.getMessage());
-                    }
-                    break;
-
-                case 5: // submit an enquiry
-                    try {
-                        projects = applicantService.getVisibleProjects();
-                        if (projects.isEmpty())
-                            throw (new IllegalArgumentException("Project not found."));
-
-                        ProjectView.displayProjectList(projects, currentUser);
-                        System.out.println("Enter the project name you want to enquire about: ");
-                        String name = sc.nextLine();
-                        Project enqProject = projectService.findProjectByName(name);
-                        if (enqProject == null)
-                            throw (new IllegalArgumentException("Project not found."));
-                        if (!applicantService.isEligibleForProject(enqProject))
-                            throw (new IllegalArgumentException("You are not allowed to enquire about this project."));
-
-                        System.out.println("Enter your enquiry: ");
-                        String query = sc.nextLine();
-                        applicantService.submitEnquiry(query, enqProject);
-                        System.out.println("Enquiry submitted successfully.");
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Error: " + e.getMessage());
-                    }
-                    break;
-
-                case 6: // edit or delete enquiry
-                    try {
-                        List<Enquiry> enquiries = applicantService.getEnquiries();
-                        if (enquiries.isEmpty()) {
-                            throw (new IllegalArgumentException("No enquiries found."));
-                        }
-                        System.out.println("Here are your enquiries: ");
-                        EnquiryView.displayEnquiries(enquiries);
-                        System.out.println("Enter enquiry ID to edit or delete: ");
-                        int enquiryId = sc.nextInt();
-                        sc.nextLine();
-
-                        Enquiry enquiry = applicantService.getEnquiry(enquiryId);
-                        if (enquiry == null) {
-                            throw (new IllegalArgumentException("Invalid enquiry ID."));
-                        }
-                        if (enquiry.getResponse() != null) {
-                            throw new IllegalArgumentException("This enquiry has already been replied.");
-                        }
-                        System.out.println("1 - Edit\n2 - Delete\n3 - Back");
-                        choice = readIntInput("Enter your choice: ");
-
-                        switch (choice) {
-                            case 1:
-                                System.out.println("Enter new enquiry message: ");
-                                String newQuery = sc.nextLine();
-                                applicantService.editEnquiry(newQuery, enquiry);
-                                System.out.println("Enquiry edited successfully.");
-                                break;
-                            case 2:
-                                applicantService.deleteEnquiry(enquiry);
-                                System.out.println("Enquiry deleted successfully.");
-                                break;
-                            case 3:
-                                break;
-                        }
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("Error: " + e.getMessage());
-                    }
-                    break;
-
-                case 7: // change password
-                    AuthService authService = new AuthService();
-                    System.out.println("Enter your old password: ");
-                    String oldPassword = sc.next();
-                    sc.nextLine();
-                    if (authService.checkUser(currentUser.getNric(), oldPassword)){
-                        System.out.println("Enter your new password: ");
-                        String newPassword = sc.next();
-                        sc.nextLine();
-                        if (newPassword != null && !newPassword.trim().isEmpty()) {
-                            authService.changePassword(currentUser, newPassword);
-                            System.out.println("Password changed successfully.");
-                            return;
-                        }
-                        else
-                            System.out.println("Invalid password.");
-                    }
-                    else {
-                        System.out.println("Incorrect old password.");
-                    }
-                    break;
-
-                case 8: // log out
-                    return;
-
-                default:
-                    System.out.println("Invalid choice"); // 输入了非数字会导致报错。catch！
+                case 1 -> viewOrApplyProjects();
+                case 2 -> viewMyProjects();
+                case 3 -> bookAFlat();
+                case 4 -> withdrawApplication();
+                case 5 -> submitAnEnquiry();
+                case 6 -> editOrDeleteEnquiry();
+                case 7 -> { if (changePassword()) { return;} }
+                case 8 -> { return; }
+                default -> System.out.println("Invalid choice");
             }
         }
     }

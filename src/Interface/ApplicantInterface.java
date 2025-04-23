@@ -6,20 +6,30 @@ import View.ProjectView;
 import View.EnquiryView;
 
 import java.util.List;
-
+/**
+ * This class provides the interface for Applicants to interact with the HDB application system.
+ * It allows applicants to view and apply for projects, manage their enquiries,
+ * book flats, and manage their application status.
+ */
 public class ApplicantInterface extends BaseInterface {
-    //set final to maintain this thread
     private final IApplicantService applicantService;
     private final IProjectService projectService;
 
+    /**
+     * Constructs an ApplicantInterface with the given user context.
+     * @param currentUser The currently logged-in applicant.
+     */
     public ApplicantInterface(User currentUser) {
-        super(currentUser);    //in this case, for currentUser: reference - User; object - roles
+        super(currentUser);
         this.applicantService = new ApplicantService((Applicant) currentUser);
         this.projectService = new ProjectService();
         super.setProjectService(this.projectService);
     }
 
-    //for case 1
+    /**
+     * Allows the applicant to view available HDB projects and apply for one if eligible.
+     * Applicant can also manage project filters from this menu.
+     */
     public void viewOrApplyProjects() {
         List<Project> projects = applicantService.getVisibleProjects();
 
@@ -81,7 +91,9 @@ public class ApplicantInterface extends BaseInterface {
         }
     }
 
-    //for case 2
+    /**
+     * Displays the current project that the applicant has applied to, if any.
+     */
     public void viewMyProjects() {
         if (applicantService.haveProject()) {
             System.out.println("Here is your project: ");
@@ -92,7 +104,9 @@ public class ApplicantInterface extends BaseInterface {
             System.out.println("You have not applied for a project.");
     }
 
-    //for case 3
+    /**
+     * Allows the applicant to book a flat if their application is approved.
+     */
     public void bookAFlat() {
         try {
             if (applicantService.isAvailableToBookFlat()) {
@@ -104,7 +118,9 @@ public class ApplicantInterface extends BaseInterface {
         }
     }
 
-    //for case 4
+    /**
+     * Allows the applicant to withdraw their application from a project.
+     */
     public void withdrawApplication() {
         try {
             applicantService.withdrawalApplication();
@@ -114,7 +130,9 @@ public class ApplicantInterface extends BaseInterface {
         }
     }
 
-    //for case 5
+    /**
+     * Allows the applicant to submit an enquiry about a visible and eligible project.
+     */
     public void submitAnEnquiry() {
         try {
             List <Project> projects = applicantService.getVisibleProjects();
@@ -139,7 +157,10 @@ public class ApplicantInterface extends BaseInterface {
         }
     }
 
-    //for case 6
+    /**
+     * Allows the applicant to edit or delete previously submitted enquiries, provided
+     * they have not yet been responded to by officers.
+     */
     public void editOrDeleteEnquiry() {
         try {
             List<Enquiry> enquiries = applicantService.getEnquiries();
@@ -180,6 +201,11 @@ public class ApplicantInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Starts the main interface loop for the applicant, presenting all available options.
+     * This method will keep running until the applicant chooses to log out.
+     */
     public void start() {
         while(true) {
             System.out.println("Welcome, " + currentUser.getName() + "!");

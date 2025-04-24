@@ -11,17 +11,24 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Service class that provides functionalities to manage and filter HDB projects.
+ * Provides services for managing {@link Project} entities, including adding,
+ * removing, finding, and filtering projects. This service interacts with the
+ * {@link ProjectDatabase} as its data source.
+ * 
+ * <p>
+ * Implements the {@link IProjectService} interface.
+ *
  */
 public class ProjectService implements IProjectService {
-    // Database instance
+
+    /** Singleton instance of the ProjectDatabase used for data operations. */
     private ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
 
     /**
      * Finds a project by its name.
      *
-     * @param name the name of the project
-     * @return the matching Project, or null if not found
+     * @param name the name of the project to find
+     * @return the project with the specified name, or {@code null} if not found
      */
     public Project findProjectByName(String name) {
         return projectDatabase.findProjectByName(name);
@@ -30,7 +37,7 @@ public class ProjectService implements IProjectService {
     /**
      * Retrieves all projects from the database.
      *
-     * @return list of all projects
+     * @return a list of all available projects
      */
     public List<Project> findAllProjects() {
         return projectDatabase.findProjects();
@@ -39,7 +46,7 @@ public class ProjectService implements IProjectService {
     /**
      * Adds a new project to the database.
      *
-     * @param project the project to be added
+     * @param project the project to add
      */
     public void addProject(Project project) {
         projectDatabase.addProject(project);
@@ -48,28 +55,28 @@ public class ProjectService implements IProjectService {
     /**
      * Deletes a project from the database.
      *
-     * @param project the project to be removed
+     * @param project the project to delete
      */
     public void deleteProject(Project project) {
         projectDatabase.removeProject(project);
     }
 
     /**
-     * Finds projects that are managed by a specific manager.
+     * Finds all projects managed by a specific manager.
      *
      * @param managerName the name of the manager
-     * @return list of projects managed by the specified manager
+     * @return a list of projects managed by the specified manager
      */
     public List<Project> findByManager(String managerName) {
         return projectDatabase.findByManager(managerName);
     }
 
     /**
-     * Applies a set of filters and sorting options to a list of projects.
+     * Applies various filters and sorting options to a list of projects based on the provided {@link FilterSettings}.
      *
-     * @param projects        the list of projects to filter
-     * @param filterSettings  the settings used to filter and sort projects
-     * @return list of filtered and sorted projects
+     * @param projects       the list of projects to filter
+     * @param filterSettings the settings used to filter and sort the projects
+     * @return a list of filtered and sorted projects
      */
     public List<Project> applyFilters(List<Project> projects, FilterSettings filterSettings) {
         List<Project> filteredProjects = new ArrayList<>(projects);
@@ -135,17 +142,17 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
-        // Filter projects that have available officer slots
-        if (filterSettings.getHasOfficerSlots() != null && filterSettings.getHasOfficerSlots()) {
-            filteredProjects = filteredProjects.stream()
-                    .filter(p -> p.getOfficerSlots() > 0)
-                    .collect(Collectors.toList());
-        }
-
-        if (filterSettings.getHasOfficerSlots() != null && !filterSettings.getHasOfficerSlots()) {
-            filteredProjects = filteredProjects.stream()
-                    .filter(p -> p.getOfficerSlots() == 0)
-                    .collect(Collectors.toList());
+        // Filter projects that have or do not have officer slots
+        if (filterSettings.getHasOfficerSlots() != null) {
+            if (filterSettings.getHasOfficerSlots()) {
+                filteredProjects = filteredProjects.stream()
+                        .filter(p -> p.getOfficerSlots() > 0)
+                        .collect(Collectors.toList());
+            } else {
+                filteredProjects = filteredProjects.stream()
+                        .filter(p -> p.getOfficerSlots() == 0)
+                        .collect(Collectors.toList());
+            }
         }
 
         // Apply sorting based on user preference
@@ -157,10 +164,12 @@ public class ProjectService implements IProjectService {
                 filteredProjects.sort(Comparator.comparing(Project::getName).reversed());
                 break;
             case PRICE_ASC:
-                filteredProjects.sort(Comparator.comparingInt((Project p) -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())));
+                filteredProjects.sort(Comparator.comparingInt(
+                        p -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())));
                 break;
             case PRICE_DESC:
-                filteredProjects.sort(Comparator.comparingInt((Project p) -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())).reversed());
+                filteredProjects.sort(Comparator.comparingInt(
+                        p -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())).reversed());
                 break;
             case DATE_ASC:
                 filteredProjects.sort(Comparator.comparing(Project::getOpeningDate));

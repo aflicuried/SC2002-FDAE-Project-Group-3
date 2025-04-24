@@ -18,8 +18,7 @@ public class Main {
     private static Scanner scanner = new Scanner(System.in);
 
     /**
-     * The main method that initializes databases, handles login flow, and dispatches
-     * users to their respective role-based interfaces.
+     * Main method that launches the application and handles user interaction.
      *
      * @param args command-line arguments (not used)
      */
@@ -31,7 +30,7 @@ public class Main {
         ApplicationDatabase applicationDatabase = ApplicationDatabase.getInstance();
         EnquiryDatabase enquiryDatabase = EnquiryDatabase.getInstance();
 
-        // Load data from CSV or storage files
+        // Load data from persistent storage
         try {
             userDatabase.loadData();
             projectDatabase.loadData();
@@ -68,14 +67,14 @@ public class Main {
                     String inputPassword = scanner.nextLine();
 
                     try {
-                        // Authenticate and retrieve current user
+                        // Authenticate and retrieve the current user
                         User currentUser = authService.authenticate(inputNRIC, inputPassword);
 
-                        // Delegate to appropriate interface based on user role
+                        // Delegate control to role-specific user interface
                         BaseInterface baseInterface = InterfaceFactory.getInterface(currentUser);
                         baseInterface.start();
 
-                        // Save data changes
+                        // Save all data changes
                         saveData();
 
                     } catch (AuthenticationException e) {
@@ -90,12 +89,7 @@ public class Main {
         }
     }
 
-    /**
-     * Prompts the user for an integer input, validating and re-prompting until a valid number is entered.
-     *
-     * @param prompt the message to display before input
-     * @return a valid integer input from the user
-     */
+    
     private static int readIntInput(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -110,13 +104,9 @@ public class Main {
         }
     }
 
-    /**
-     * Saves data from all databases back to their respective files.
-     * Handles any IO exceptions that may occur during saving.
-     */
+    
     private static void saveData() {
         try {
-            // Save all database changes to their respective files
             UserDatabase.getInstance().saveData();
             ProjectDatabase.getInstance().saveData();
             RegistrationDatabase.getInstance().saveData();

@@ -11,32 +11,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Provides services for managing {@link Project} entities, including adding,
- * removing, finding, and filtering projects. This service interacts with the
- * {@link ProjectDatabase} as its data source.
- * 
- * <p>
- * Implements the {@link IProjectService} interface.
- *
+ * Service class that provides functionalities to manage and filter HDB projects.
  */
 public class ProjectService implements IProjectService {
-
+    // Database instance
     private ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
 
     /**
-     * Finds and returns a project by its name.
+     * Finds a project by its name.
      *
-     * @param name the name of the project to find
-     * @return the {@link Project} with the given name, or null if not found
+     * @param name the name of the project
+     * @return the matching Project, or null if not found
      */
     public Project findProjectByName(String name) {
         return projectDatabase.findProjectByName(name);
     }
 
     /**
-     * Retrieves all available projects from the database.
+     * Retrieves all projects from the database.
      *
-     * @return a list of all {@link Project} instances
+     * @return list of all projects
      */
     public List<Project> findAllProjects() {
         return projectDatabase.findProjects();
@@ -45,50 +39,49 @@ public class ProjectService implements IProjectService {
     /**
      * Adds a new project to the database.
      *
-     * @param project the {@link Project} to be added
+     * @param project the project to be added
      */
     public void addProject(Project project) {
         projectDatabase.addProject(project);
     }
 
     /**
-     * Removes a project from the database.
+     * Deletes a project from the database.
      *
-     * @param project the {@link Project} to be removed
+     * @param project the project to be removed
      */
     public void deleteProject(Project project) {
         projectDatabase.removeProject(project);
     }
 
     /**
-     * Retrieves all projects managed by a specific manager.
+     * Finds projects that are managed by a specific manager.
      *
      * @param managerName the name of the manager
-     * @return a list of projects managed by the specified manager
+     * @return list of projects managed by the specified manager
      */
     public List<Project> findByManager(String managerName) {
         return projectDatabase.findByManager(managerName);
     }
 
     /**
-     * Filters and sorts a list of projects based on the specified {@link FilterSettings}.
-     * Supports filtering by neighbourhood, flat type, price range, date range, availability, and officer slots.
-     * Also supports sorting by name, price, or opening date in ascending or descending order.
+     * Applies a set of filters and sorting options to a list of projects.
      *
-     * @param projects the list of projects to filter
-     * @param filterSettings the settings to apply during filtering and sorting
-     * @return a list of projects that meet the filter criteria
+     * @param projects        the list of projects to filter
+     * @param filterSettings  the settings used to filter and sort projects
+     * @return list of filtered and sorted projects
      */
     public List<Project> applyFilters(List<Project> projects, FilterSettings filterSettings) {
         List<Project> filteredProjects = new ArrayList<>(projects);
 
-        // Filtering logic
+        // Filter by neighbourhood
         if (filterSettings.getNeighbourhood() != null) {
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.getNeighbourhood().equalsIgnoreCase(filterSettings.getNeighbourhood()))
                     .collect(Collectors.toList());
         }
 
+        // Filter by flat type availability
         if (filterSettings.getFlatType() != null) {
             filteredProjects = filteredProjects.stream()
                     .filter(p -> {
@@ -102,54 +95,60 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
+        // Filter by minimum price
         if (filterSettings.getMinPrice() != null) {
-            int minPrice = filterSettings.getMinPrice();
+            final int minPrice = filterSettings.getMinPrice();
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.get2RoomPrice() >= minPrice || p.get3RoomPrice() >= minPrice)
                     .collect(Collectors.toList());
         }
 
+        // Filter by maximum price
         if (filterSettings.getMaxPrice() != null) {
-            int maxPrice = filterSettings.getMaxPrice();
+            final int maxPrice = filterSettings.getMaxPrice();
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.get2RoomPrice() <= maxPrice || p.get3RoomPrice() <= maxPrice)
                     .collect(Collectors.toList());
         }
 
+        // Filter by project opening start date
         if (filterSettings.getStartDate() != null) {
-            LocalDate startDate = filterSettings.getStartDate();
+            final LocalDate startDate = filterSettings.getStartDate();
             filteredProjects = filteredProjects.stream()
                     .filter(p -> !p.getOpeningDate().isBefore(startDate))
                     .collect(Collectors.toList());
         }
 
+        // Filter by project closing end date
         if (filterSettings.getEndDate() != null) {
-            LocalDate endDate = filterSettings.getEndDate();
+            final LocalDate endDate = filterSettings.getEndDate();
             filteredProjects = filteredProjects.stream()
                     .filter(p -> !p.getClosingDate().isAfter(endDate))
                     .collect(Collectors.toList());
         }
 
+        // Filter by minimum available units
         if (filterSettings.getMinAvailableUnits() != null) {
-            int minUnits = filterSettings.getMinAvailableUnits();
+            final int minUnits = filterSettings.getMinAvailableUnits();
             filteredProjects = filteredProjects.stream()
                     .filter(p -> p.get2RoomUnits() >= minUnits || p.get3RoomUnits() >= minUnits)
                     .collect(Collectors.toList());
         }
 
-        if (filterSettings.getHasOfficerSlots() != null) {
-            if (filterSettings.getHasOfficerSlots()) {
-                filteredProjects = filteredProjects.stream()
-                        .filter(p -> p.getOfficerSlots() > 0)
-                        .collect(Collectors.toList());
-            } else {
-                filteredProjects = filteredProjects.stream()
-                        .filter(p -> p.getOfficerSlots() == 0)
-                        .collect(Collectors.toList());
-            }
+        // Filter projects that have available officer slots
+        if (filterSettings.getHasOfficerSlots() != null && filterSettings.getHasOfficerSlots()) {
+            filteredProjects = filteredProjects.stream()
+                    .filter(p -> p.getOfficerSlots() > 0)
+                    .collect(Collectors.toList());
         }
 
-        // Sorting logic
+        if (filterSettings.getHasOfficerSlots() != null && !filterSettings.getHasOfficerSlots()) {
+            filteredProjects = filteredProjects.stream()
+                    .filter(p -> p.getOfficerSlots() == 0)
+                    .collect(Collectors.toList());
+        }
+
+        // Apply sorting based on user preference
         switch (filterSettings.getSortType()) {
             case NAME_ASC:
                 filteredProjects.sort(Comparator.comparing(Project::getName));
@@ -158,12 +157,10 @@ public class ProjectService implements IProjectService {
                 filteredProjects.sort(Comparator.comparing(Project::getName).reversed());
                 break;
             case PRICE_ASC:
-                filteredProjects.sort(Comparator.comparingInt(
-                        p -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())));
+                filteredProjects.sort(Comparator.comparingInt((Project p) -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())));
                 break;
             case PRICE_DESC:
-                filteredProjects.sort(Comparator.comparingInt(
-                        p -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())).reversed());
+                filteredProjects.sort(Comparator.comparingInt((Project p) -> Math.min(p.get2RoomPrice(), p.get3RoomPrice())).reversed());
                 break;
             case DATE_ASC:
                 filteredProjects.sort(Comparator.comparing(Project::getOpeningDate));

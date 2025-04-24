@@ -287,6 +287,9 @@ public class ManagerService implements IManagerService {
                         || a.getApplication().getStatus().equals(Application.ApplicationStatus.BOOKED))
                 .collect(Collectors.toList());
 
+        if (filterType == null) {
+            return applicants;
+        }
         // Filtering logic already well-explained
         return switch (filterType) {
             case "flatType" -> applicants.stream().filter(a -> a.getApplication().getFlatType().toString().equals(filterValue)).collect(Collectors.toList());

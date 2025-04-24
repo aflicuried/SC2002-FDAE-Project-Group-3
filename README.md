@@ -6,7 +6,7 @@
 - [Source Code](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/src)
 - [UML Class Diagram](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/Documentation/Class%20Diagram)
 - [UML Sequence Diagram](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/Documentation/Sequence%20Diagram)
-- [Javadoc]()
+- [Javadoc](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/doc)
 
 ## Prerequisites
 - Java Development Kit (JDK) 17 or above.

@@ -382,9 +382,9 @@ public class ManagerInterface extends BaseInterface {
                 case 3 -> manageApplications();
                 case 4 -> generateReports();
                 case 5 -> manageEnquiries();
-                case 6 -> changePassword();
+                case 6 -> { if (changePassword()) { return; } }
                 case 7 -> { return; }
-                default -> System.out.println("Invalid choice");
+                default -> System.out.println("Invalid choice.");
             }
         }
     }

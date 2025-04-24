@@ -13,9 +13,9 @@ public class InterfaceFactory { //to create "new Interface(currentUser)"
     private static final Map<User.UserRole, Function<User, BaseInterface>> creators = new HashMap<>();
 
     static {
-        creators.put(User.UserRole.APPLICANT, user -> new ApplicantInterface((Applicant) user));
-        creators.put(User.UserRole.OFFICER, user -> new OfficerInterface((HDBOfficer) user));
-        creators.put(User.UserRole.MANAGER, user -> new ManagerInterface((HDBManager) user));
+        creators.put(User.UserRole.APPLICANT, ApplicantInterface::new);
+        creators.put(User.UserRole.OFFICER, OfficerInterface::new);
+        creators.put(User.UserRole.MANAGER, ManagerInterface::new);
     }
 
     public static BaseInterface getInterface(User user) {

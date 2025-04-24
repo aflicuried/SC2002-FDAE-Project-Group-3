@@ -175,12 +175,12 @@ public class OfficerInterface extends BaseInterface {
 
     public void registerForAProject() {
         try {
-            List<Project> projects2 = officerService.getProjectsForRegi();
-            if (projects2.isEmpty()) {
+            List<Project> projects = officerService.getProjectsForRegi();
+            if (projects.isEmpty()) {
                 throw new IllegalArgumentException("No eligible projects found for registration");
             }
             System.out.println("Here are the projects you can register: ");
-            ProjectView.displayManagedList(projects2);
+            ProjectView.displayManagedList(projects);
 
             System.out.println("Enter the project name to register for: ");
             String regProjectName = sc.nextLine();
@@ -192,7 +192,7 @@ public class OfficerInterface extends BaseInterface {
             }
 
             // check if officer can register
-            if (!projects2.contains(selectedProject)) {
+            if (!projects.contains(selectedProject)) {
                 throw new IllegalArgumentException("You are not eligible to register for this project.");
             }
 

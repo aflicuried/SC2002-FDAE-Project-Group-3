@@ -5,9 +5,7 @@ import Entity.HDBManager;
 import Entity.HDBOfficer;
 import Entity.User;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,6 +61,80 @@ public class UserDatabase {
         br.close();
         return users;
     }
+
+    public void saveData() throws IOException {
+        File directory = new File("data");
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        saveApplicants();
+        saveOfficers();
+        saveManagers();
+    }
+
+    private void saveApplicants() throws IOException {
+        File file = new File("data/ApplicantList.csv");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
+            writer.write("Name,NRIC,Age,Marital Status,Password");
+            writer.newLine();
+
+            for (Applicant applicant : applicants) {
+                if (applicant.getRole() == User.UserRole.APPLICANT) {
+                    String line = String.format("%s,%s,%d,%s,%s",
+                            applicant.getName(),
+                            applicant.getNric(),
+                            applicant.getAge(),
+                            applicant.getMaritalStatus(),
+                            applicant.getPassword());
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+        }
+    }
+
+    private void saveOfficers() throws IOException {
+        File file = new File("data/OfficerList.csv");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
+            writer.write("Name,NRIC,Age,Marital Status,Password");
+            writer.newLine();
+
+            for (HDBOfficer officer : officers) {
+                String line = String.format("%s,%s,%d,%s,%s",
+                        officer.getName(),
+                        officer.getNric(),
+                        officer.getAge(),
+                        officer.getMaritalStatus(),
+                        officer.getPassword());
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+    }
+
+    private void saveManagers() throws IOException {
+        File file = new File("data/ManagerList.csv");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+
+            writer.write("Name,NRIC,Age,Marital Status,Password");
+            writer.newLine();
+
+            for (HDBManager manager : managers) {
+                String line = String.format("%s,%s,%d,%s,%s",
+                        manager.getName(),
+                        manager.getNric(),
+                        manager.getAge(),
+                        manager.getMaritalStatus(),
+                        manager.getPassword());
+                writer.write(line);
+                writer.newLine();
+            }
+        }
+    }
+
 
     public List<Applicant> findApplicants() {
         return applicants;

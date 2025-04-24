@@ -104,6 +104,12 @@ public class ProjectService implements IProjectService {
                     .collect(Collectors.toList());
         }
 
+        if (filterSettings.getHasOfficerSlots() != null && !filterSettings.getHasOfficerSlots()) {
+            filteredProjects = filteredProjects.stream()
+                    .filter(p -> p.getOfficerSlots() == 0)
+                    .collect(Collectors.toList());
+        }
+
         // apply sorting
         switch (filterSettings.getSortType()) {
             case NAME_ASC:

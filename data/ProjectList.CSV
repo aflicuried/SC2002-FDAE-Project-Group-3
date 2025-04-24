@@ -1,5 +1,5 @@
 Project Name,Neighbourhood,Type 1,Number of units for Type 1,Selling price for Type 1,Type 2,Number of units for Type 2,Selling price for Type 2,Application opening date,Application closing date,Manager,Officer Slots,Officer
 Acacia Breeze,Yishun,2-Room,2,350000,3-Room,3,450000,2025/2/15,2025/4/15,Jessica,3,"Daniel,Emily"
 NTU,NTU,2-Room,10,200000,3-Room,10,300000,2025/4/16,2025/12/31,Jessica,3,""
-NUS,NUS,2-Room,10,300000,3-Room,10,400000,2025/4/16,2025/5/1,Michael,5,""
+NUS,NUS,2-Room,10,300000,3-Room,9,400000,2025/4/16,2025/5/1,Michael,4,"David"
 MarinaBay,Marina Bay,2-Room,10,100,3-Room,10,1000,2025/6/1,2025/8/1,Michael,10,""

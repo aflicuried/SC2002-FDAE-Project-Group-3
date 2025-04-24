@@ -1,5 +1,4 @@
 import Database.*;
-import Entity.Application;
 import Interface.BaseInterface;
 import Interface.InterfaceFactory;
 import Entity.User;
@@ -34,9 +33,7 @@ public class Main {
         }
 
         while(true) {
-            //UserDatabase userDatabase = UserDatabase.getInstance(); //Singleton pattern
-            //ProjectDatabase projectDatabase = ProjectDatabase.getInstance();
-            System.out.println("Welcome to BTO Management System!");//also can read by console
+            System.out.println("Welcome to BTO Management System!");
             System.out.println("1 - Login");
             System.out.println("2 - Exit");
             int choice = readIntInput("Enter your choice: ");
@@ -73,7 +70,7 @@ public class Main {
                 }
                 case 2 -> { return; }
 
-                default -> System.out.println("Invalid choice");
+                default -> System.out.println("Invalid choice.");
             }
         }
     }
@@ -95,6 +92,7 @@ public class Main {
     private static void saveData() {
         try {
             // Save all database changes to their respective files
+            UserDatabase.getInstance().saveData();
             ProjectDatabase.getInstance().saveData();
             RegistrationDatabase.getInstance().saveData();
             ApplicationDatabase.getInstance().saveData();

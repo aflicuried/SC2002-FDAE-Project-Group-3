@@ -1,8 +1,5 @@
-# 2002-FDAE-GRP 4
-# BTO Project 🏘
-![BTO](https://github.com/JayHaych/SC2002_BTO-Project/blob/main/Documentation/Imported_Image.png)  
-
-BTO Project is a command line interface designed to be a one-stop platform for users to apply, approve, manage BTO projects based on user's role.
+# 2002-FDAE-GRP 3
+# BTO Management System 🏘 
 
 ## Getting Started
 

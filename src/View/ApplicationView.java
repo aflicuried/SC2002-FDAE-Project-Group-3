@@ -11,9 +11,9 @@ import java.util.List;
 public class ApplicationView {
 
     /**
-     * Displays the details of a single application.
+     * Displays the details of a single application in a formatted manner.
      *
-     * @param application the application to display
+     * @param application the {@link Application} object to be displayed
      */
     public static void displayApplication(Application application) {
         System.out.println("Applicant NRIC: " + application.getUser().getNric());
@@ -26,20 +26,20 @@ public class ApplicationView {
     }
 
     /**
-     * Displays a list of applications by invoking {@link #displayApplication(Application)} 
-     * on each application in the list.
+     * Displays a list of applications by invoking {@link #displayApplication(Application)}
+     * for each application in the list.
      *
-     * @param applications the list of applications to display
+     * @param applications a list of {@link Application} objects to be displayed
      */
     public static void displayApplications(List<Application> applications) {
         applications.forEach(ApplicationView::displayApplication);
     }
 
     /**
-     * Generates and displays a receipt for an application if its status is BOOKED.
-     * Includes personal and project information.
+     * Generates and displays a receipt for a successfully booked application.
+     * The receipt includes user and project information if the status is BOOKED.
      *
-     * @param application the application for which to generate the receipt
+     * @param application the {@link Application} object for which the receipt is to be generated
      */
     public static void generateReceipt(Application application) {
         if (application.getStatus() == Application.ApplicationStatus.BOOKED) {

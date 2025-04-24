@@ -9,6 +9,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+
+/**
+ * Factory class to create the appropriate user interface (UI) instance
+ * based on the role of the provided {@link User}.
+ *
+ * <p>This factory uses a role-based map to instantiate and return the correct
+ * implementation of {@link BaseInterface} (e.g., {@link ApplicantInterface}, 
+ * {@link OfficerInterface}, {@link ManagerInterface}).</p>
+ */
 public class InterfaceFactory { //to create "new Interface(currentUser)"
     private static final Map<User.UserRole, Function<User, BaseInterface>> creators = new HashMap<>();
 
@@ -18,6 +27,14 @@ public class InterfaceFactory { //to create "new Interface(currentUser)"
         creators.put(User.UserRole.MANAGER, ManagerInterface::new);
     }
 
+
+    /**
+     * Returns the appropriate interface implementation based on the user's role.
+     *
+     * @param user the currently logged-in user
+     * @return the interface implementation specific to the user's role
+     * @throws IllegalArgumentException if the user is null or has an unsupported role
+     */
     public static BaseInterface getInterface(User user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null.");

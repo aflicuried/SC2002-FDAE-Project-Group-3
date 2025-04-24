@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Singleton class that manages the storage and retrieval of Application objects.
+ * Applications are stored in memory and persisted to a CSV file.
+ */
 public class ApplicationDatabase {
     private static final ApplicationDatabase instance = new ApplicationDatabase();
     private List<Application> applications = new ArrayList<>();
@@ -16,10 +20,21 @@ public class ApplicationDatabase {
 
     private ApplicationDatabase() {}
 
+    /**
+     * Returns the singleton instance of ApplicationDatabase.
+     *
+     * @return the single instance of ApplicationDatabase
+     */
     public static ApplicationDatabase getInstance() {
         return instance;
     }
 
+    /**
+     * Loads application data from a CSV file into memory.
+     * Skips entries with invalid status or flat type, and skips if user or project not found.
+     *
+     * @throws IOException if there is an issue reading the file
+     */
     public void loadData() throws IOException {
         applications.clear();
         File file = new File(FILE_PATH);
@@ -35,7 +50,7 @@ public class ApplicationDatabase {
                     isHeader = false;
                     continue;
                 }
-                String[] parts = line.split(",", -1);//keep empty field
+                String[] parts = line.split(",", -1); // keep empty fields
                 if (parts.length >= 5) {
                     String userNric = parts[0];
                     String projectName = parts[1];
@@ -43,7 +58,6 @@ public class ApplicationDatabase {
                     String flatTypeStr = parts[3];
                     boolean withdrawal = Boolean.parseBoolean(parts[4]);
 
-                    // get User and Project
                     User user = UserDatabase.getInstance().findByNric(userNric);
                     Project project = ProjectDatabase.getInstance().findProjectByName(projectName);
 
@@ -51,14 +65,14 @@ public class ApplicationDatabase {
                     try {
                         status = Application.ApplicationStatus.valueOf(statusStr);
                     } catch (IllegalArgumentException e) {
-                        continue; // skip none status
+                        continue; // skip invalid status
                     }
 
                     Application.FlatType flatType;
                     try {
                         flatType = Application.FlatType.valueOf(flatTypeStr);
                     } catch (IllegalArgumentException e) {
-                        continue; // skip none flat type
+                        continue; // skip invalid flat type
                     }
 
                     if (user != null && project != null) {
@@ -71,7 +85,11 @@ public class ApplicationDatabase {
         }
     }
 
-    // write applications.csv
+    /**
+     * Saves the in-memory application list to a CSV file.
+     *
+     * @throws IOException if there is an issue writing the file
+     */
     public void saveData() throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             writer.write("Applicant NRIC,Project Name,Status,Flat Type,Withdrawal");
@@ -90,41 +108,72 @@ public class ApplicationDatabase {
         }
     }
 
-    // add Application
+    /**
+     * Adds a new application to the list.
+     *
+     * @param application the application to add
+     */
     public void addApplication(Application application) {
         applications.add(application);
     }
 
-    // get Applications copies
+    /**
+     * Returns all applications.
+     *
+     * @return list of all applications
+     */
     public List<Application> findApplications() {
         return applications;
     }
 
-    // find Application by Project
+    /**
+     * Finds applications associated with a specific project.
+     *
+     * @param project the project to filter by
+     * @return list of applications for the given project
+     */
     public List<Application> findByProject(Project project) {
         return applications.stream()
                 .filter(a -> a.getProject().equals(project))
                 .collect(Collectors.toList());
     }
 
-    // find Application by Nric
+    /**
+     * Finds an application by the applicant's NRIC.
+     *
+     * @param nric the NRIC of the applicant
+     * @return the application or null if not found
+     */
     public Application findByApplicantNric(String nric) {
         return applications.stream()
                 .filter(a -> a.getUser().getNric().equals(nric))
                 .findFirst().orElse(null);
     }
 
-    // find Application by Withdrawal
+    /**
+     * Finds applications by withdrawal status.
+     *
+     * @param withdrawal true to find withdrawn applications, false otherwise
+     * @return list of applications matching the withdrawal status
+     */
     public List<Application> findByWithdrawal(boolean withdrawal) {
         return applications.stream()
                 .filter(a -> a.isWithdrawal() == withdrawal)
                 .collect(Collectors.toList());
     }
 
-    /* find to extend
+    /**
+     * Flexible method to find applications using a predicate.
+     * (Uncomment to use.)
+     *
+     * @param predicate a condition to filter applications
+     * @return list of applications that match the predicate
+     */
+    /*
     public List<Application> findBy(Predicate<Application> predicate) {
         return applications.stream()
                 .filter(predicate)
                 .collect(Collectors.toList());
-    }*/
+    }
+    */
 }

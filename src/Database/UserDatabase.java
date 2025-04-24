@@ -11,26 +11,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Singleton class that manages the loading, storing, and retrieval of user data,
+ * including Applicants, HDB Officers, and HDB Managers.
+ */
 public class UserDatabase {
     private static final UserDatabase instance = new UserDatabase();
     private List<Applicant> applicants = new ArrayList<>();
     private List<HDBOfficer> officers = new ArrayList<>();
     private List<HDBManager> managers = new ArrayList<>();
+
     private UserDatabase() {}
 
+    /**
+     * Returns the singleton instance of UserDatabase.
+     *
+     * @return the singleton UserDatabase
+     */
     public static UserDatabase getInstance() {
         return instance;
     }
 
+    /**
+     * Loads user data from CSV files and stores them in the respective lists.
+     *
+     * @throws IOException if an error occurs while reading the CSV files
+     */
     public void loadData() throws IOException {
         applicants = readUser("data/ApplicantList.csv", User.UserRole.APPLICANT)
-                .stream().map(u -> (Applicant)u).collect(Collectors.toList());
+                .stream().map(u -> (Applicant) u).collect(Collectors.toList());
+
         officers = readUser("data/OfficerList.csv", User.UserRole.OFFICER)
-                .stream().map(u -> (HDBOfficer)u).collect(Collectors.toList());
+                .stream().map(u -> (HDBOfficer) u).collect(Collectors.toList());
+
         managers = readUser("data/ManagerList.csv", User.UserRole.MANAGER)
-                .stream().map(u -> (HDBManager)u).collect(Collectors.toList()); //downcasting
+                .stream().map(u -> (HDBManager) u).collect(Collectors.toList());
     }
 
+    /**
+     * Reads user data from a CSV file based on the specified role.
+     *
+     * @param filePath the path to the CSV file
+     * @param role     the role of the users to read
+     * @return a list of User objects of the given role
+     * @throws IOException if an error occurs while reading the file
+     */
     public List<User> readUser(String filePath, User.UserRole role) throws IOException {
         List<User> users = new ArrayList<>();
         BufferedReader br = new BufferedReader(new FileReader(filePath));
@@ -51,10 +76,10 @@ public class UserDatabase {
 
             User user;
             switch (role) {
-                case APPLICANT -> { user = new Applicant(name, nric, age, status, password); }
-                case OFFICER -> { user = new HDBOfficer(name, nric, age, status, password); }
-                case MANAGER -> { user = new HDBManager(name, nric, age, status, password); }
-                default -> { throw new IllegalArgumentException("Invalid role"); }
+                case APPLICANT -> user = new Applicant(name, nric, age, status, password);
+                case OFFICER -> user = new HDBOfficer(name, nric, age, status, password);
+                case MANAGER -> user = new HDBManager(name, nric, age, status, password);
+                default -> throw new IllegalArgumentException("Invalid role");
             }
             users.add(user);
         }
@@ -62,6 +87,11 @@ public class UserDatabase {
         return users;
     }
 
+    /**
+     * Saves all current user data to the CSV file.
+     *
+     * @throws IOException if an I/O error occurs while writing the file
+     */
     public void saveData() throws IOException {
         File directory = new File("data");
         if (!directory.exists()) {
@@ -135,26 +165,50 @@ public class UserDatabase {
         }
     }
 
-
+    /**
+     * Returns a list of all applicants.
+     *
+     * @return list of Applicant objects
+     */
     public List<Applicant> findApplicants() {
         return applicants;
     }
 
+    /**
+     * Returns a list of all HDB officers.
+     *
+     * @return list of HDBOfficer objects
+     */
     public List<HDBOfficer> findOfficers() {
         return officers;
     }
 
+    /**
+     * Returns a list of all HDB managers.
+     *
+     * @return list of HDBManager objects
+     */
     public List<HDBManager> findManagers() {
         return managers;
     }
 
+    /**
+     * Returns a list of all users regardless of role.
+     *
+     * @return list of all User objects
+     */
     public List<User> findUsers() {
-        List<User> allUsers = Stream.of(findApplicants(), findOfficers(), findManagers())
+        return Stream.of(findApplicants(), findOfficers(), findManagers())
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
-        return allUsers;
     }
 
+    /**
+     * Finds a user by their NRIC.
+     *
+     * @param nric the NRIC of the user
+     * @return the matching User object, or null if not found
+     */
     public User findByNric(String nric) {
         return findUsers().stream()
                 .filter(user -> user.getNric().equals(nric))

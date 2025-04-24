@@ -8,11 +8,23 @@ import View.RegistrationView;
 
 import java.util.List;
 
+
+/**
+ * OfficerInterface provides the command-line interface for users who are HDB officers.
+ * Officers can apply for projects, manage enquiries, book flats, handle applications,
+ * and view or register for projects. It supports both applicant and officer roles.
+ */
 public class OfficerInterface extends BaseInterface {
 
     private final IOfficerService officerService;
     private final IProjectService projectService;
 
+
+    /**
+     * Constructs an OfficerInterface with the current logged-in officer.
+     *
+     * @param currentUser the currently authenticated user, expected to be an instance of HDBOfficer
+     */
     public OfficerInterface(User currentUser) {
         super(currentUser);//in this case, for currentUser: reference - User; object - Applicant/Officer/...
         this.officerService = new OfficerService((HDBOfficer) currentUser);
@@ -21,6 +33,10 @@ public class OfficerInterface extends BaseInterface {
     }
 
     //for case 1
+    /**
+     * Displays the list of available visible projects, allows the officer to filter them,
+     * apply for one, or manage project filters. Ensures an officer can only apply once.
+     */
     public void viewOrApplyProjects() {
         List<Project> projects = officerService.getVisibleProjects();
 
@@ -78,6 +94,9 @@ public class OfficerInterface extends BaseInterface {
     }
 
     //for case 2
+    /**
+     * Displays the project that the officer has applied for, if any.
+     */
     public void viewMyProject() {
         if (officerService.haveProject()) {
             System.out.println("Here is your project: ");
@@ -87,7 +106,11 @@ public class OfficerInterface extends BaseInterface {
             System.out.println("You have not applied for a project.");
     }
 
+    
     //for case 3
+    /**
+     * Allows the officer to book a flat if their application has been approved.
+     */
     public void bookAFlat() {
         try {
             if (officerService.isAvailableToBookFlat()) {
@@ -99,7 +122,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+    
     //for case 4
+    /**
+     * Allows the officer to request withdrawal of their submitted application.
+     */
     public void withdrawApplication() {
         try {
             officerService.withdrawalApplication();
@@ -109,6 +136,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Allows the officer to submit an enquiry for a specific project, if eligible.
+     * Validates that the project exists and is visible to the officer.
+     */
     public void submitAnEnquiry() {
         try {
             List<Project> projects = officerService.getVisibleProjects();
@@ -133,6 +165,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Displays the officer's past enquiries and allows editing or deletion if the enquiry 
+     * has not been responded to yet.
+     */
     public void editOrDeleteEnquiry() {
         try {
             List<Enquiry> enquiries = officerService.getEnquiries();
@@ -173,6 +210,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Allows the officer to register for a project they are eligible to manage.
+     * Validates project eligibility before submitting the registration.
+     */
     public void registerForAProject() {
         try {
             List<Project> projects = officerService.getProjectsForRegi();
@@ -204,6 +246,10 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Displays the officer's submitted project registrations, if any.
+     */
     public void viewMyRegistration() {
         try {
             List<Registration> registrations = officerService.getRegistrations();
@@ -216,6 +262,10 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Displays the project that the officer is currently managing.
+     */
     public void viewMyManagingProject() {
         try {
             Project managedProject = officerService.getProjectHandling();
@@ -228,6 +278,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Allows the officer to update an approved applicant's application status to "BOOKED"
+     * for the project they are managing.
+     */
     public void setApplicationsToBooked() {
         try {
             Project managedProject = officerService.getProjectHandling();
@@ -244,7 +299,11 @@ public class OfficerInterface extends BaseInterface {
             System.out.println(e.getMessage());
         }
     }
-
+    
+    /**
+     * Displays enquiries directed at the officer's managed project and allows the officer
+     * to respond to them.
+     */
     public void replyToEnquiries() {
         try {
             List<Enquiry> projectEnquiries = officerService.getEnquiriesForReply();
@@ -272,6 +331,11 @@ public class OfficerInterface extends BaseInterface {
         }
     }
 
+
+    /**
+     * Entry point for the OfficerInterface menu. Displays role-based options (applicant/officer)
+     * and routes user actions accordingly.
+     */
     public void start() {
         while(true) {
             System.out.println("\nWelcome, " + currentUser.getName() + "!");

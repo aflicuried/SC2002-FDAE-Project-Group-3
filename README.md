@@ -1,20 +1,18 @@
 # 2002-FDAE-GRP 3
 # BTO Management System 🏘 
 
-## Getting Started
-
-### Documentation
+## Documentation
 - [Final Written Report]()
-- [Source Code]()
+- [Source Code](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/src)
 - [UML Class Diagram](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/Documentation/ClassDiagram)
 - [UML Sequence Diagram](https://github.com/aflicuried/SC2002-FDAE-Project-Group-3/tree/master/Documentation/Sequence%20Diagram)
 - [Javadoc]()
 
-### Prerequisites
+## Prerequisites
 - Java Development Kit (JDK) 17 or above.
 - An IDE (recommended: IntelliJ IDEA, Eclipse, or VS Code with Java extensions).
 
-### Project Setup
+## Project Setup
 1. Clone or download the project
    - If using git, type in *gh repo clone aflicuried/SC2002-FDAE-Project-Group-3* into the terminal.
    - Alternatively, download and extract the zip file.

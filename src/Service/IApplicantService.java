@@ -98,7 +98,7 @@ public interface IApplicantService {
      *
      * @return a list of Enquiry objects
      */
-    List<Enquiry> getEnquiries;
+    List<Enquiry> getEnquiries();
 
 
     /**

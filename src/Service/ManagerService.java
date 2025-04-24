@@ -28,9 +28,7 @@ public class ManagerService implements IManagerService {
                               int room3, int price3, LocalDate openingDate, LocalDate closingDate, int slots, User user) {
         FlatType flatType1 = new FlatType("2-Room", room2, price2);
         FlatType flatType2 = new FlatType("3-Room", room3, price3);
-        List<FlatType> flatTypes = new ArrayList<FlatType>(Arrays.asList(flatType1, flatType2)); //can?
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/M/d");
-
+        List<FlatType> flatTypes = new ArrayList<>(Arrays.asList(flatType1, flatType2)); //can?
         Project project = new Project(projectName, neighbourhood, flatTypes, openingDate, closingDate, (HDBManager) user, slots, new ArrayList<>());
         return project;
     }
@@ -44,9 +42,7 @@ public class ManagerService implements IManagerService {
     }
 
     public boolean checkAuthForProject(Project project) {
-        if(project.getManager().getName().equals(manager.getName()))
-            return true;
-        return false;
+        return project.getManager().getName().equals(manager.getName());
     }
 
     public void editProject(int choice, Project project) {
